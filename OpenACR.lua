@@ -41,10 +41,39 @@ function OpenACR.LoadBehaviorFiles()
   local dataFiles = GetModuleFiles("data")
 end
 
+function IsCapable(skill)
+  if not HasAction(skill.id) then
+    return false
+  end
+
+  local action = ActionList:Get(1, skill.id)
+  return action.level <= Player.level
+end
+
+function GetTargetDebuff(target, buff)
+  for i,_ in ipairs(target.buffs) do
+    if target.buffs[i].id == buff.id then
+      return target.buffs[i]
+    end
+  end
+
+  return nil
+end
+
+function PlayerHasBuff(buff)
+  for i,_ in ipairs(Player.buffs) do
+    if Player.buffs[i].id == buff.id then
+      return true
+    end
+  end
+
+  return false
+end
+
 function LookupSkill(name)
   for actionId, action in pairs(ActionList:Get(1)) do
-    if action.name == name and action.level ~= 0 then
-      d(tostring(actionId))
+    if string.contains(string.lower(action.name), string.lower(name)) and action.level ~= 0 then
+      d(action.name .. ': ' .. tostring(actionId))
     end
   end
 end
