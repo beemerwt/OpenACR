@@ -16,6 +16,16 @@ local profile = {
   SkillEnabled   = {}
 }
 
+-- TODO: Check for Bunshin buff,
+--  specifically use Assassinate during that time
+--  especially if TrickAttack is up.
+--  Bunshin has 90s CD, TA is 60s and lasts 15s.
+--  If we can save ~20s from TA being up, we can use bunshin within that 5s interval and use assassinate for BIG damage
+--  We want to make sure the first Bunshin we do is within that 
+
+-- TODO: Add Feint
+-- TODO: Add Shukuchi
+
 local AwaitDo = ml_global_information.AwaitDo
 
 local AOE = false
@@ -119,8 +129,31 @@ local function IsNinjutsuReady()
   return PlayerHasBuff(Buffs.Kassatsu) or offCd
 end
 
+local function GetMudraName(mudra)
+  local mudraName = nil
+  for k, v in pairs(Mudras) do
+    if v == mudra then
+      mudraName = k
+      break
+    end
+  end
+
+  return mudraName
+end
+
+local function GetMudraSkillStatus(mudraName)
+  local action = ActionList:Get(1, Skills[mudraName])
+  if table.valid(action) then
+    return action
+  else
+    d("Didn't find action from skill: " .. mudraName)
+    return {}
+  end
+end
+
 local function ComboMudra(mudra)
   PerformingMudra = true;
+  local mudraName = GetMudraName(mudra)
 
   local first = ActionList:Get(1, mudra[1]);
   local second = ActionList:Get(1, mudra[2]);
@@ -130,16 +163,22 @@ local function ComboMudra(mudra)
     third = ActionList:Get(1, mudra[3]);
   end
 
-  AwaitDo(0, 500, first:Cast(), nil, function()
-    AwaitDo(0, 500, second:Cast(), nil, function()
+  AwaitDo(100, 500, function() return first:Cast() end, nil, function()
+    AwaitDo(100, 500, function() return second:Cast() end, nil, function()
       if third == nil then
+        local status = GetMudraSkillStatus(mudraName)
         PerformingMudra = false
         d("Casted Mudra: " .. first.name .. ', ' .. second.name)
+        d("Mudra: " .. mudraName)
+        d("Status: " .. tostring(status))
         return
       end
 
-      AwaitDo(0, 500, third:Cast(), nil, function()
+      AwaitDo(100, 500, function() return third:Cast() end, nil, function()
+        local status = GetMudraSkillStatus(mudraName)
         d("Casted Mudra: " .. first.name .. ', ' .. second.name .. ', ' .. third.name)
+        d("Mudra: " .. mudraName)
+        d("Status: " .. tostring(status))
         PerformingMudra = false
       end)
     end)
@@ -152,7 +191,7 @@ local function Opener()
   -- 11 seconds before pull JCT -> Huton
   -- Hide
   -- TCJ -> Suiton cast 1s before pull
-  -- At 1 second on the countdown, use Suiton Icon Suiton then immediately use Kassatsu Icon Kassatsu
+  -- At 1 second on the countdown, use Suiton Icon Suiton then immediately use Kassatsu
   -- Spinning Edge -> Grade 6 Tincture of Dexterity
   -- Gust Slash -> Mug -> Bunshin
   -- Phantom Kamaitachi -> late weave Trick Attack Icon Trick Attack
@@ -167,11 +206,6 @@ local function Opener()
 end
 
 local function Ninjutsu(numNearby)
-  if profile.SkillEnabled.Kassatsu and not IsNinjutsuReady() then
-    local Kassatsu = ActionList:Get(1, Skills.Kassatsu);
-    if Kassatsu:IsReady() then return Kassatsu:Cast() end
-  end
-
   if IsNinjutsuReady() then
     if numNearby > 2 then
       if profile.SkillEnabled.Doton then
@@ -196,7 +230,7 @@ local function Ninjutsu(numNearby)
       end
 
       if profile.SkillEnabled.Doton then
-        if numNearby > 1 and not PlayerHasBuff(Buffs.Doton) then
+        if numNearby > 2 and not PlayerHasBuff(Buffs.Doton) then
           return ComboMudra(Mudras.Doton)
         end
       end
@@ -288,7 +322,7 @@ local function ManageNinki(numNearby)
 
   -- Ninki Management
   -- The big thing is that you will never want to overcap it
-  if numNearby <= 2 then
+  if numNearby < 3 then
     -- If Trick Attack is up, use all your Ninki on Bhavacakra.
     -- If you are about to overcap Ninki and Trick Attack is not up, use Bhavacakra once.
     if TrickAttackIsActive() or ninkiPower >= 85 then
@@ -370,10 +404,6 @@ function profile.Cast()
 
   local nearby = GetNearbyEnemies(10)
 
-  if #nearby > 0 then
-    d('Num Nearby: ' .. tostring(#nearby))
-  end
-
   if MaintainHuton() then return true end
 
   if Player.hp.percent < 35 then
@@ -389,6 +419,12 @@ function profile.Cast()
     if CastOnTargetIfPossible(Skills.TrickAttack) then return true end
   end
 
+  if profile.SkillEnabled.Assassinate then
+    if TrickAttackIsActive() and #nearby < 3 then
+      if CastOnTargetIfPossible(Skills.Assassinate) then return true end
+    end
+  end
+
   if profile.SkillEnabled.Meisui then
     if PlayerHasBuff(Buffs.Suiton) and IsOnCooldown(Skills.TrickAttack) then
       if CastOnSelfIfPossible(Skills.Meisui) then
@@ -399,10 +435,10 @@ function profile.Cast()
 
   if Ninjutsu(#nearby) then return true end
 
-  if profile.SkillEnabled.Assassinate then
-    if TrickAttackDebuff ~= nil and #nearby < 3 then
-      if CastOnTargetIfPossible(Skills.Assassinate) then return true end
-    end    
+  -- Priority of Kassatsu is not very high
+  -- We just need to throw it into our rotation on CD
+  if profile.SkillEnabled.Kassatsu and not IsNinjutsuReady() then
+    if CastOnSelfIfPossible(Skills.Kassatsu) then return true end
   end
 
   if BasicCombo(#nearby) then return true end
