@@ -1,5 +1,7 @@
 local OpenACR = {}
+local CachedTarget = nil
 local CachedAction = {}
+local CachedBuff = nil
 
 function OpenACR.LoadBehaviorFiles()
   local dataFiles = GetModuleFiles("data")
@@ -11,16 +13,16 @@ function IsCapable(skillId)
     and action.level <= Player.level
 end
 
-local function distToTarget(target)
-  return math.distance2d(Player.pos.x, Player.pos.z, target.pos.x, target.pos.z)
+local function distToTarget()
+  return math.distance2d(Player.pos.x, Player.pos.z, CachedTarget.pos.x, CachedTarget.pos.z)
 end
 
-function CastOnTarget(skillId, target)
+function CastOnTarget(skillId)
   if CachedAction.id ~= skillId then
     CachedAction = ActionList:Get(1, skillId)
   end
 
-  return CachedAction:Cast(target.id)
+  return CachedAction:Cast(CachedTarget.id)
 end
 
 function CastOnSelf(skillId)
@@ -31,37 +33,91 @@ function CastOnSelf(skillId)
   return CachedAction:Cast()
 end
 
-function SkillIsActuallyReadyOnTarget(skillId, target)
+function CanCastOnSelf(skillId)
   if CachedAction.id ~= skillId then
     CachedAction = ActionList:Get(1, skillId)
   end
 
-  return CachedAction:IsReady(target.id)
+  return CachedAction:IsReady()
     and not CachedAction.isoncd
+end
+
+function IsOnCooldown(skillId)
+  if CachedAction.id ~= skillId then
+    CachedAction = ActionList:Get(1, skillId)
+  end
+
+  return CachedAction.isoncd
+end
+
+function CanCastOnTarget(skillId)
+  if CachedAction.id ~= skillId then
+    CachedAction = ActionList:Get(1, skillId)
+  end
+
+  return not CachedAction.isoncd
+    and CachedAction:IsReady(CachedTarget.id);
+end
+
+function CastOnTargetIfPossible(skillId)
+  if CanCastOnTarget(skillId) then
+    if CastOnTarget(skillId) then
+      return true
+    end
+  end
+
+  return false
+end
+
+function CastOnSelfIfPossible(skillId)
+  if CanCastOnSelf(skillId) then
+    if CastOnSelf(skillId) then
+      return true
+    end
+  end
+
+  return false
+end
+
+function GetACRTarget()
+  CachedTarget = Player:GetTarget()
+  return CachedTarget
 end
 
 function ClearCache()
   CachedAction = {}
+  CachedBuff = nil
+  CachedTarget = nil
 end
 
-function GetTargetDebuff(target, buff)
-  for i,_ in ipairs(target.buffs) do
-    if target.buffs[i].id == buff then
-      return target.buffs[i]
+function GetTargetDebuff(buff)
+  for i,_ in ipairs(CachedTarget.buffs) do
+    if CachedTarget.buffs[i].id == buff then
+      return CachedTarget.buffs[i]
     end
   end
 
   return nil
 end
 
-function PlayerHasBuff(buff)
+function GetPlayerBuff(buff)
   for i,_ in ipairs(Player.buffs) do
     if Player.buffs[i].id == buff then
-      return true
+      return Player.buffs[i]
     end
   end
 
-  return false
+  return nil
+end
+
+function TargetHasDebuff(debuff)
+  local debuff = GetTargetDebuff(debuff)
+  return debuf ~= nil
+end
+
+function PlayerHasBuff(buff)
+  local buff = GetPlayerBuff(buff)
+  return buff ~= nil
 end
 
 function LookupSkill(name)
