@@ -141,17 +141,14 @@ local function GetMudraName(mudra)
   return mudraName
 end
 
-local function GetMudraSkillStatus(mudraName)
-  local action = ActionList:Get(1, Skills[mudraName])
-  if table.valid(action) then
-    return action
-  else
-    d("Didn't find action from skill: " .. mudraName)
-    return {}
-  end
-end
+-- Notes...
+-- Huton:IsReady(Player) will be true upon it being ready
+-- Raiton:IsReady(Target) will be true upon it being ready, It will ALSO be ready on the Player.
+-- Suiton:IsReady(Target) the same as Raiton ^
 
 local function ComboMudra(mudra)
+  if PlayerHasBuff(Buffs.Mudra) then return false end
+
   PerformingMudra = true;
   local mudraName = GetMudraName(mudra)
 
@@ -166,21 +163,12 @@ local function ComboMudra(mudra)
   AwaitDo(100, 500, function() return first:Cast() end, nil, function()
     AwaitDo(100, 500, function() return second:Cast() end, nil, function()
       if third == nil then
-        local status = GetMudraSkillStatus(mudraName)
         PerformingMudra = false
-        d("Casted Mudra: " .. first.name .. ', ' .. second.name)
-        d("Mudra: " .. mudraName)
-        d("Status: " .. tostring(status))
-        return
+      else
+        AwaitDo(100, 500, function() return third:Cast() end, nil, function()
+          PerformingMudra = false
+        end)
       end
-
-      AwaitDo(100, 500, function() return third:Cast() end, nil, function()
-        local status = GetMudraSkillStatus(mudraName)
-        d("Casted Mudra: " .. first.name .. ', ' .. second.name .. ', ' .. third.name)
-        d("Mudra: " .. mudraName)
-        d("Status: " .. tostring(status))
-        PerformingMudra = false
-      end)
     end)
   end)
 
@@ -357,6 +345,7 @@ local lasttime = 0
 -- Action code should be called and fired here.
 function profile.Cast()
   -- Runs on a "separate" thread, so we "lock" until it's done
+  if not OpenACR_IsReady then return false end
   if PerformingMudra then return false end
 
   -- Update 20x a second?
@@ -437,8 +426,10 @@ function profile.Cast()
 
   -- Priority of Kassatsu is not very high
   -- We just need to throw it into our rotation on CD
-  if profile.SkillEnabled.Kassatsu and not IsNinjutsuReady() then
-    if CastOnSelfIfPossible(Skills.Kassatsu) then return true end
+  if profile.SkillEnabled.Kassatsu then
+    if not IsNinjutsuReady() and not PlayerHasBuff(Buffs.Mudra) then
+      if CastOnSelfIfPossible(Skills.Kassatsu) then return true end
+    end
   end
 
   if BasicCombo(#nearby) then return true end
