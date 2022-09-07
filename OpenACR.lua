@@ -3,6 +3,8 @@ local CachedTarget = nil
 local CachedAction = {}
 local CachedBuff = nil
 
+OpenACR_IsReady = true
+
 --[[
   Useful notes about minionlib api
 
