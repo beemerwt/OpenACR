@@ -3,6 +3,18 @@ local CachedTarget = nil
 local CachedAction = {}
 local CachedBuff = nil
 
+--[[
+  Useful notes about minionlib api
+
+  ml_global_information has a lot of good coroutine functionality
+
+  function AwaitDo(mintimer, maxtimer, evaluator, dowhile, followall)
+    -- It will NEVER continue until evaluator is true or maxtimer
+    -- It will ONLY continue when mintimer has passed
+    -- dowhile AND followall will ALWAYS execute
+    -- evaluator determines within the time when it finishes, which then calls followall
+]]--
+
 function OpenACR.LoadBehaviorFiles()
   local dataFiles = GetModuleFiles("data")
 end
@@ -77,6 +89,17 @@ function CastOnSelfIfPossible(skillId)
   end
 
   return false
+end
+
+function GetNearbyEnemies(radius)
+  local attackables = MEntityList("alive,attackable");
+  if not table.valid(attackables) then return {} end
+
+  -- Gets targets within range of AOE attacks centered on player
+  local nearby = FilterByProximity(attackables, Player.pos, radius);
+  if not table.valid(nearby) then return {} end
+
+  return nearby
 end
 
 function GetACRTarget()
