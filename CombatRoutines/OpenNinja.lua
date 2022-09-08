@@ -3,7 +3,7 @@ local profile = {
   GUI = {
     open = false,
     visible = true,
-    name = "OpenACR Ninja"
+    name = "OpenACR Ninja",
   },
 
   classes = {
@@ -11,9 +11,17 @@ local profile = {
     [FFXIV.JOBS.ROGUE] = true,
   },
 
-  ComboEnabled   = true,
-  NinkiEnabled   = true,
-  SkillEnabled   = {}
+  ComboEnabled       = true,
+  NinkiEnabled       = true,
+  NinjutsuEnabled    = true,
+  AOEEnabled         = true,
+  RaijuEnabled       = true,
+  TCJEnabled         = true,
+  MeisuiEnabled      = true,
+  AssassinateEnabled = true,
+  TAEnabled          = true,
+  ThrowingEnabled    = true,
+  ACEnabled          = true
 }
 
 -- TODO: Check for Bunshin buff,
@@ -25,14 +33,10 @@ local profile = {
 
 -- TODO: Add Feint
 -- TODO: Add Shukuchi
-
 local AwaitDo = ml_global_information.AwaitDo
-
-local AOE = false
-local PerformingMudra = false
+local AwaitThen = ml_global_information.AwaitThen
 
 local activeTrickAttack = nil
-local lastFrameActive = false
 
 local Buffs = {
   Mudra       = 496,
@@ -60,41 +64,45 @@ local Skills = {
   Assassinate     = 2246,
   ThrowingDagger  = 2247,
   Mug             = 2248,
-  DeathBlossom    = 2254,
   TrickAttack     = 2258,
-  Ninjutsu        = 2260,
-  Ten             = 2259,
-  Chi             = 2261,
-  Jin             = 2263,
   Shukuchi        = 2262,
-  Kassatsu        = 2264, -- No GCD
   ArmorCrush      = 3563,
   TenChiJin       = 7403,
   SecondWind      = 7541,
   Bloodbath       = 7542, -- No GCD
+  Kamaitachi      = 16493,
+  DreamWithinADream = 3566, -- No GCD
 
-  -- Mudras
-  Fuma   = 2265,
-  Katon  = 2266,
-  Raiton = 2267,
-  Hyoton = 2268,
-  Hyosho = 16492,
-  Goka   = 16491,
-  Doton  = 2270,
-  Huton  = 2269,
-  Suiton = 2271,
+  -- Mudras/Ninjutsu
+  Ninjutsu = 2260,
+  Ten      = 2259,
+  Chi      = 2261,
+  Jin      = 2263,
+  MudraTen = 18805,
+  MudraChi = 18806,
+  MudraJin = 18807,
+  Fuma     = 2265,
+  Katon    = 2266,
+  Raiton   = 2267,
+  Hyoton   = 2268,
+  Hyosho   = 16492,
+  Goka     = 16491,
+  Doton    = 2270,
+  Huton    = 2269,
+  Suiton   = 2271,
+  Kassatsu = 2264,
 
+  -- Raijus
   ForkedRaiju     = 25777,
   FleetingRaiju   = 25778,
-  HakkeMujinsatsu = 16488,
-  Kamaitachi      = 16493,
 
-  DreamWithinADream = 3566, -- No GCD
-    
   -- Basic Combo
   SpinningEdge    = 2240,
   GustSlash       = 2242,
   AeolianEdge     = 2255,
+  -- Basic Combo AOE
+  HakkeMujinsatsu = 16488,
+  DeathBlossom    = 2254,
 
   -- Ninki
   Meisui          = 16489,
@@ -106,15 +114,15 @@ local Skills = {
 -- If it's not enabled it's not a part of the IcyVeins rotation...
 -- devnote: elements without a key are stacked from 1 - inf
 local Mudras = {
-  Fuma   = { Skills.Ten, Skills.Ten },
-  Katon  = { Skills.Chi, Skills.Ten },
-  Raiton = { Skills.Ten, Skills.Chi },
-  Hyoton = { Skills.Ten, Skills.Jin },
-  Hyosho = { Skills.Ten, Skills.Jin },
-  Goka   = { Skills.Chi, Skills.Ten },
-  Doton  = { Skills.Ten, Skills.Jin, Skills.Chi },
-  Huton  = { Skills.Jin, Skills.Chi, Skills.Ten },
-  Suiton = { Skills.Ten, Skills.Chi, Skills.Jin },
+  Fuma   = { Skills.Ten, Skills.MudraTen },
+  Katon  = { Skills.Chi, Skills.MudraTen },
+  Raiton = { Skills.Ten, Skills.MudraChi },
+  Hyoton = { Skills.Ten, Skills.MudraJin },
+  Hyosho = { Skills.Ten, Skills.MudraJin },
+  Goka   = { Skills.Jin, Skills.MudraTen },
+  Doton  = { Skills.Ten, Skills.MudraJin, Skills.MudraChi },
+  Huton  = { Skills.Jin, Skills.MudraChi, Skills.MudraTen },
+  Suiton = { Skills.Ten, Skills.MudraChi, Skills.MudraJin },
 }
 
 -- TODO: Handle Mug the same
@@ -123,57 +131,42 @@ local function TrickAttackIsActive()
 end
 
 local function IsNinjutsuReady()
-  local offCd = not ActionList:Get(1, Skills.Ten).isoncd
-    and not ActionList:Get(1, Skills.Chi).isoncd
-    and not ActionList:Get(1, Skills.Jin).isoncd
-  return PlayerHasBuff(Buffs.Kassatsu) or offCd
+  return PlayerHasBuff(Buffs.Kassatsu) or not IsOnCooldown(Skills.Ten)
 end
 
-local function GetMudraName(mudra)
-  local mudraName = nil
-  for k, v in pairs(Mudras) do
-    if v == mudra then
-      mudraName = k
-      break
+local PerformingMudra = false
+local StartMudra = 0
+local MudraQueue = {}
+local function ComboMudra()
+  if not PerformingMudra then return false end
+
+  if TimeSince(StartMudra) >= 6000 or #MudraQueue == 0 then
+    PerformingMudra = false
+    return true
+  end
+
+  local action = ActionList:Get(1, MudraQueue[1])
+  if action:IsReady(Player.id) then
+    if action:Cast(Player.id) then
+      table.remove(MudraQueue, 1)
     end
   end
 
-  return mudraName
+  return true
+end
+
+local function QueueMudra(mudra)
+  if PlayerHasBuff(Buffs.Mudra) then return false end
+  MudraQueue = table.shallowcopy(mudra)
+  StartMudra = Now()
+  PerformingMudra = true
+  return true
 end
 
 -- Notes...
 -- Huton:IsReady(Player) will be true upon it being ready
 -- Raiton:IsReady(Target) will be true upon it being ready, It will ALSO be ready on the Player.
 -- Suiton:IsReady(Target) the same as Raiton ^
-
-local function ComboMudra(mudra)
-  if PlayerHasBuff(Buffs.Mudra) then return false end
-
-  PerformingMudra = true;
-  local mudraName = GetMudraName(mudra)
-
-  local first = ActionList:Get(1, mudra[1]);
-  local second = ActionList:Get(1, mudra[2]);
-  local third = nil
-  
-  if mudra[3] ~= nil then
-    third = ActionList:Get(1, mudra[3]);
-  end
-
-  AwaitDo(100, 500, function() return first:Cast() end, nil, function()
-    AwaitDo(100, 500, function() return second:Cast() end, nil, function()
-      if third == nil then
-        PerformingMudra = false
-      else
-        AwaitDo(100, 500, function() return third:Cast() end, nil, function()
-          PerformingMudra = false
-        end)
-      end
-    end)
-  end)
-
-  return true
-end
 
 local function Opener()
   -- 11 seconds before pull JCT -> Huton
@@ -194,55 +187,52 @@ local function Opener()
 end
 
 local function Ninjutsu(numNearby)
-  if IsNinjutsuReady() then
-    if numNearby > 2 then
-      if profile.SkillEnabled.Doton then
-        if not PlayerHasBuff(Buffs.Doton) then
-          return ComboMudra(Mudras.Doton)
-        end
-      end
+  if not IsCapable(Skills.Ninjutsu) then return false end
+  if not IsNinjutsuReady() then return false end
 
-      if PlayerHasBuff(Buffs.Kassatsu)
-        and profile.SkillEnabled.Goka then
-        return ComboMudra(Mudras.Goka);
-      end
-      
-      return ComboMudra(Mudras.Katon);
-    else
-      -- Use Suiton to set up Trick Attack when there is less than 20 seconds left on Trick Attack's cooldown.
-      if profile.SkillEnabled.Suiton and not PlayerHasBuff(Buffs.Suiton) then
-        local TrickAttack = ActionList:Get(1, Skills.TrickAttack)
-        if TrickAttack.cdmax - TrickAttack.cd < 20 then
-          return ComboMudra(Mudras.Suiton)
-        end
-      end
+  if numNearby > 2 and profile.AOEEnabled then
+    if not PlayerHasBuff(Buffs.Doton) and IsCapable(Skills.Doton) then
+      return QueueMudra(Mudras.Doton)
+    end
 
-      if profile.SkillEnabled.Doton then
-        if numNearby > 2 and not PlayerHasBuff(Buffs.Doton) then
-          return ComboMudra(Mudras.Doton)
-        end
-      end
+    if PlayerHasBuff(Buffs.Kassatsu) and IsCapable(Skills.Goka) then
+      return QueueMudra(Mudras.Goka);
+    end
 
-      local hasKassatsu = PlayerHasBuff(Buffs.Kassatsu)
-      if numNearby > 1 and profile.SkillEnabled.Goka and hasKassatsu and IsCapable(Skills.Goka) then
-        return ComboMudra(Mudras.Goka) -- Goka Mekkyaku for multi-target
-      elseif profile.SkillEnabled.Hyosho and hasKassatsu and IsCapable(Skills.Hyosho) then
-        return ComboMudra(Mudras.Hyosho) -- Hyosho Ranryu for single-target
-      end
+    return QueueMudra(Mudras.Katon);
+  end
 
-      if profile.SkillEnabled.Raiton then
-        return ComboMudra(Mudras.Raiton)
-      end
+  -- Use Suiton to set up Trick Attack when there is less than 20 seconds left on Trick Attack's cooldown.
+  if not PlayerHasBuff(Buffs.Suiton) then
+    local TrickAttack = ActionList:Get(1, Skills.TrickAttack)
+    if TrickAttack.cdmax - TrickAttack.cd < 20 then
+      return QueueMudra(Mudras.Suiton)
     end
   end
 
-  return false
+  if numNearby > 1 and profile.AOEEnabled then
+    if not PlayerHasBuff(Buffs.Doton) and IsCapable(Skills.Doton) then
+      return QueueMudra(Mudras.Doton)
+    end
+
+    if PlayerHasBuff(Buffs.Kassatsu) and IsCapable(Skills.Goka) then
+      return QueueMudra(Mudras.Goka) -- Goka Mekkyaku for multi-target
+    end
+  end
+
+  if PlayerHasBuff(Buffs.Kassatsu) and IsCapable(Skills.Hyosho) then
+    return QueueMudra(Mudras.Hyosho) -- Hyosho Ranryu for single-target
+  end
+
+  if IsCapable(Skills.Raiton) then
+    return QueueMudra(Mudras.Raiton)
+  end
+
+  return QueueMudra(Mudras.Fuma)
 end
 
 local function BasicCombo(numNearby)
-  if not profile.ComboEnabled then return false end
-
-  if numNearby > 2 then    
+  if numNearby > 2 and profile.AOEEnabled then
     if Player.lastcomboid == Skills.DeathBlossom then
       return CastOnSelfIfPossible(Skills.HakkeMujinsatsu)
     else
@@ -264,14 +254,8 @@ local function BasicCombo(numNearby)
 end
 
 function UseRaiju(numNearby)
-  if not profile.SkillEnabled.FleetingRaiju and not profile.SkillEnabled.ForkedRaiju then
-    return false
-  end
-
   if numNearby > 2 then return false end
-  if not PlayerHasBuff(Buffs.RaijuReady) then
-    return false
-  end
+  if not PlayerHasBuff(Buffs.RaijuReady) then return false end
 
   return CastOnTargetIfPossible(Skills.FleetingRaiju)
     or CastOnTargetIfPossible(Skills.ForkedRaiju);
@@ -282,10 +266,10 @@ local function MaintainHuton()
   local hutonTimeleft = Player.gauge[2]
   local hasHuton = hutonTimeleft > 0
   if not hasHuton and IsNinjutsuReady() then
-    return ComboMudra(Mudras.Huton)
+    return QueueMudra(Mudras.Huton)
   end
 
-  if hutonTimeleft < 30000 and profile.SkillEnabled.ArmorCrush then
+  if hutonTimeleft < 30000 and profile.ACEnabled then
     local isImmediate = Player.gauge[2] <= 3000
     if isImmediate or Player.lastcomboid == Skills.GustSlash then
       if CastOnTargetIfPossible(Skills.ArmorCrush) then return true end
@@ -296,9 +280,8 @@ local function MaintainHuton()
 end
 
 local function ManageNinki(numNearby)
-  if not profile.NinkiEnabled then return false end
   local ninkiPower = Player.gauge[1]
-  
+
   if CastOnTargetIfPossible(Skills.Bunshin) then
     return true
   end
@@ -329,12 +312,16 @@ local function ManageNinki(numNearby)
   return false
 end
 
-local function TCJ()
-  if not profile.SkillEnabled.TenChiJin then return false end
-  if not TrickAttackIsActive() then return false end
+local function MugIsActive()
+  local mug = GetTargetDebuff(Buffs.Mug)
+  return mug ~= nil
+end
 
-  -- We only ever want to do this if Meisui is up
-  if IsOnCooldown(Skills.Meisui) then return false end
+local function TCJ()
+  if not TrickAttackIsActive() and not MugIsActive() then return false end
+
+    -- We only ever want to do this if Meisui is up
+  if profile.MeisuiEnabled and IsOnCooldown(Skills.Meisui) then return false end
 
   return CastOnSelfIfPossible(Skills.TenChiJin)
 end
@@ -344,17 +331,15 @@ local lasttime = 0
 -- The Cast() function is where the magic happens.
 -- Action code should be called and fired here.
 function profile.Cast()
-  -- Runs on a "separate" thread, so we "lock" until it's done
-  if not OpenACR_IsReady then return false end
-  if PerformingMudra then return false end
-
-  -- Update 20x a second?
   if TimeSince(lasttime) < 50 then return false end
-  lastTime = Now()
+  lasttime = Now()
 
+  if not OpenACR_IsReady then return false end
   if Player == nil then return false end
   if not ActionList:IsReady() then return false end
-  
+
+  if ComboMudra() then return true end
+
   -- ensures we're getting newest state of any actions
   ClearCache()
 
@@ -399,22 +384,36 @@ function profile.Cast()
     if CastOnSelfIfPossible(Skills.Bloodbath) then return true end
   end
 
-  if UseRaiju(#nearby) then return true end
-  if ManageNinki(#nearby) then return true end
-  if TCJ() then return true end
+  if profile.RaijuEnabled then
+    if UseRaiju(#nearby) then
+      return true
+    end
+  end
+
+  if profile.NinkiEnabled then
+    if ManageNinki(#nearby) then
+      return true
+    end
+  end
+
+  if profile.TCJEnabled then
+    if TCJ() then
+      return true
+    end
+  end
 
   -- TA becomes priority when Suiton is active
-  if profile.SkillEnabled.TrickAttack then
+  if profile.TAEnabled then
     if CastOnTargetIfPossible(Skills.TrickAttack) then return true end
   end
 
-  if profile.SkillEnabled.Assassinate then
+  if profile.AssassinateEnabled then
     if TrickAttackIsActive() and #nearby < 3 then
       if CastOnTargetIfPossible(Skills.Assassinate) then return true end
     end
   end
 
-  if profile.SkillEnabled.Meisui then
+  if profile.MeisuiEnabled then
     if PlayerHasBuff(Buffs.Suiton) and IsOnCooldown(Skills.TrickAttack) then
       if CastOnSelfIfPossible(Skills.Meisui) then
         return true
@@ -422,40 +421,51 @@ function profile.Cast()
     end
   end
 
-  if Ninjutsu(#nearby) then return true end
+  if profile.NinjutsuEnabled then
+    if Ninjutsu(#nearby) then
+      return true
+    end
 
-  -- Priority of Kassatsu is not very high
-  -- We just need to throw it into our rotation on CD
-  if profile.SkillEnabled.Kassatsu then
+    -- Priority of Kassatsu is not very high
+    -- We just need to throw it into our rotation on CD
     if not IsNinjutsuReady() and not PlayerHasBuff(Buffs.Mudra) then
       if CastOnSelfIfPossible(Skills.Kassatsu) then return true end
     end
   end
 
-  if BasicCombo(#nearby) then return true end
-  if CastOnTargetIfPossible(Skills.ThrowingDagger) then return true end
+  if profile.ComboEnabled then
+    if BasicCombo(#nearby) then
+      return true
+    end
+  end
+
+  if profile.ThrowingEnabled then
+    if CastOnTargetIfPossible(Skills.ThrowingDagger) then
+      return true
+    end
+  end
 
   return false
 end
 
 -- The Draw() function provides a place where a developer can show custom options.
 function profile.Draw()
-  if not profile.GUI.open then
-    return
-  end
+  if not profile.GUI.open then return end
 
   profile.GUI.visible, profile.GUI.open = GUI:Begin(profile.GUI.name, profile.GUI.open)
-  if not profile.GUI.visible then
-    return
+  if profile.GUI.visible then
+    profile.AOEEnabled = GUI:Checkbox("AOE Enabled", profile.AOEEnabled)
+    profile.ComboEnabled = GUI:Checkbox("Combo Enabled", profile.ComboEnabled)
+    profile.NinkiEnabled = GUI:Checkbox("Ninki Enabled", profile.NinkiEnabled)
+    profile.NinjutsuEnabled = GUI:Checkbox("Ninjutsu Enabled", profile.NinjutsuEnabled)
+    profile.RaijuEnabled = GUI:Checkbox("Raiju Enabled", profile.RaijuEnabled)
+    profile.TCJEnabled = GUI:Checkbox("Ten Chi Jin", profile.TCJEnabled)
+    profile.ACEnabled = GUI:Checkbox("Armor Crush", profile.ACEnabled)
+    profile.ThrowingEnabled = GUI:Checkbox("Throwing Dagger", profile.ThrowingEnabled)
+    profile.AssassinateEnabled = GUI:Checkbox("Assassinate", profile.AssassinateEnabled)
+    profile.MeisuiEnabled = GUI:Checkbox("Meisui", profile.MeisuiEnabled)
+    profile.TAEnabled = GUI:Checkbox("Trick Attack", profile.TAEnabled)
   end
-  
-  profile.ComboEnabled   = GUI:Checkbox("Combo Enabled", profile.ComboEnabled)
-  profile.NinkiEnabled   = GUI:Checkbox("Ninki Enabled", profile.NinkiEnabled)
-
-  for skill,_ in pairs(Skills) do
-    profile.SkillEnabled[skill] = GUI:Checkbox(skill, profile.SkillEnabled[skill])
-  end
-
   GUI:End()
 end
 
@@ -477,12 +487,17 @@ end
 
 -- The OnLoad() function is fired when a profile is prepped and loaded by ACR.
 function profile.OnLoad()
-  profile.ComboEnabled   = ACR.GetSetting("OpenACR_Ninja_ComboEnabled", true)
-  profile.NinkiEnabled   = ACR.GetSetting("OpenACR_Ninja_NinkiEnabled", true)
-
-  for skill,_ in pairs(Skills) do
-    profile.SkillEnabled[skill] = ACR.GetSetting("OpenACR_Ninja_" .. skill .. "Enabled", true)
-  end
+  profile.ComboEnabled = ACR.GetSetting("OpenACR_Ninja_ComboEnabled", true)
+  profile.NinkiEnabled = ACR.GetSetting("OpenACR_Ninja_NinkiEnabled", true)
+  profile.AOEEnabled = ACR.GetSetting("OpenACR_Ninja_AOEEnabled", true)
+  profile.NinjutsuEnabled = ACR.GetSetting("OpenACR_Ninja_NinjutsuEnabled", true)
+  profile.RaijuEnabled = ACR.GetSetting("OpenACR_Ninja_RaijuEnabled", true)
+  profile.TCJEnabled = ACR.GetSetting("OpenACR_Ninja_TenChiJinEnabled", true)
+  profile.ACEnabled = ACR.GetSetting("OpenACR_Ninja_ArmorCrushEnabled", true)
+  profile.ThrowingEnabled = ACR.GetSetting("OpenACR_Ninja_ThrowingDaggerEnabled", true)
+  profile.AssassinateEnabled = ACR.GetSetting("OpenACR_Ninja_AssassinateEnabled", true)
+  profile.MeisuiEnabled = ACR.GetSetting("OpenACR_Ninja_MeisuiEnabled", true)
+  profile.TAEnabled = ACR.GetSetting("OpenACR_Ninja_TrickAttackEnabled", true)
 end
 
 -- The OnClick function is fired when a user clicks on the ACR party interface.
@@ -498,12 +513,6 @@ end
 
 -- The OnUpdate() function is fired on the gameloop, like any other OnUpdate function found in FFXIVMinion code.
 function profile.OnUpdate(event, tickcount)
-  local mudra = GetPlayerBuff(Buffs.Mudra)
-  if mudra ~= nil then
-    if mudra.stacks ~= lastMudraStacks then
-      wasMudraUpdated = true
-    end
-  end
 end
 
 -- Return the profile to ACR, so it can be read.
