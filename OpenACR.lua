@@ -5,6 +5,8 @@ local CachedBuff = nil
 
 OpenACR_IsReady = true
 
+local AwaitDo = ml_global_information.AwaitDo
+
 --[[
   Useful notes about minionlib api
 
@@ -23,8 +25,7 @@ end
 
 function IsCapable(skillId)
   local action = ActionList:Get(1, skillId)
-  return table.valid(action)
-    and action.level <= Player.level
+  return table.valid(action) and action.level <= Player.level
 end
 
 local function distToTarget()
@@ -136,12 +137,12 @@ function GetPlayerBuff(buff)
 end
 
 function TargetHasDebuff(debuff)
-  local debuff = GetTargetDebuff(debuff)
-  return debuf ~= nil
+  debuff = GetTargetDebuff(debuff)
+  return debuff ~= nil
 end
 
 function PlayerHasBuff(buff)
-  local buff = GetPlayerBuff(buff)
+  buff = GetPlayerBuff(buff)
   return buff ~= nil
 end
 
@@ -151,4 +152,23 @@ function LookupSkill(name)
       d(action.name .. ': ' .. tostring(actionId))
     end
   end
+end
+
+function ForceCast(skillId, targeted)
+  if targeted == nil then targeted = true end
+  local targetId = targeted and CachedTarget or Player.id
+  local action = ActionList:Get(1, skillId)
+
+  OpenACR_IsReady = false
+  AwaitDo(0, 1000, function()
+    return Player.lastcastid == skillId
+  end,
+  function()
+    if action:IsReady(targetId) then
+      action:Cast(targetId)
+    end
+  end,
+  function()
+    OpenACR_IsReady = true
+  end)
 end
