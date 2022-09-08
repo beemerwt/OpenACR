@@ -114,15 +114,15 @@ local Skills = {
 -- If it's not enabled it's not a part of the IcyVeins rotation...
 -- devnote: elements without a key are stacked from 1 - inf
 local Mudras = {
-  Fuma   = { Skills.Ten, Skills.MudraTen },
-  Katon  = { Skills.Chi, Skills.MudraTen },
-  Raiton = { Skills.Ten, Skills.MudraChi },
-  Hyoton = { Skills.Ten, Skills.MudraJin },
-  Hyosho = { Skills.Ten, Skills.MudraJin },
-  Goka   = { Skills.Jin, Skills.MudraTen },
-  Doton  = { Skills.Ten, Skills.MudraJin, Skills.MudraChi },
-  Huton  = { Skills.Jin, Skills.MudraChi, Skills.MudraTen },
-  Suiton = { Skills.Ten, Skills.MudraChi, Skills.MudraJin },
+  Fuma   = { 'ten', 'ten' },
+  Katon  = { 'chi', 'ten' },
+  Raiton = { 'ten', 'chi' },
+  Hyoton = { 'ten', 'jin' },
+  Hyosho = { 'ten', 'jin' },
+  Goka   = { 'jin', 'ten' },
+  Doton  = { 'ten', 'jin', 'chi' },
+  Huton  = { 'jin', 'chi', 'ten' },
+  Suiton = { 'ten', 'chi', 'jin' },
 }
 
 -- TODO: Handle Mug the same
@@ -134,18 +134,23 @@ local function IsNinjutsuReady()
   return PlayerHasBuff(Buffs.Kassatsu) or not IsOnCooldown(Skills.Ten)
 end
 
-local PerformingMudra = false
 local StartMudra = 0
 local MudraQueue = {}
 local function ComboMudra()
-  if not PerformingMudra then return false end
+  if #MudraQueue == 0 then return false end
+  if TimeSince(StartMudra) >= 6000 then return false end
 
-  if TimeSince(StartMudra) >= 6000 or #MudraQueue == 0 then
-    PerformingMudra = false
-    return true
+  local next = MudraQueue[1] == 'ten' and Skills.Ten
+    or MudraQueue[1] == 'chi' and Skills.Chi
+    or MudraQueue[1] == 'jin' and Skills.Jin
+
+  if PlayerHasBuff(Buffs.Mudra) then
+    next = next == Skills.Ten and Skills.MudraTen
+      or next == Skills.Chi and Skills.MudraChi
+      or next == Skills.Jin and Skills.MudraJin
   end
 
-  local action = ActionList:Get(1, MudraQueue[1])
+  local action = ActionList:Get(1, next)
   if action:IsReady(Player.id) then
     if action:Cast(Player.id) then
       table.remove(MudraQueue, 1)
@@ -156,10 +161,8 @@ local function ComboMudra()
 end
 
 local function QueueMudra(mudra)
-  if PlayerHasBuff(Buffs.Mudra) then return false end
   MudraQueue = table.shallowcopy(mudra)
   StartMudra = Now()
-  PerformingMudra = true
   return true
 end
 
@@ -326,14 +329,9 @@ local function TCJ()
   return CastOnSelfIfPossible(Skills.TenChiJin)
 end
 
-local lasttime = 0
-
 -- The Cast() function is where the magic happens.
 -- Action code should be called and fired here.
 function profile.Cast()
-  if TimeSince(lasttime) < 50 then return false end
-  lasttime = Now()
-
   if not OpenACR_IsReady then return false end
   if Player == nil then return false end
   if not ActionList:IsReady() then return false end
@@ -363,13 +361,12 @@ function profile.Cast()
     return false
   end
 
-  -- FORCE CAST FOR MUDRA BEFORE ANYTHING
   if playerHasMudra then
     if CastOnSelf(Skills.Ninjutsu) then return true end
     if CastOnTarget(Skills.Ninjutsu) then return true end
     return false
   end
-  
+
   if playerHasKamaitachi then
     if CastOnTarget(Skills.Kamaitachi) then return true end
     if CastOnTarget(Skills.Bunshin) then return true end
