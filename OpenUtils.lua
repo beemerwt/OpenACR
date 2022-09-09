@@ -5,9 +5,19 @@
   Just utility functions
 ]]--
 
+OpenACR_IsReady = true
+local AwaitDo = ml_global_information.AwaitDo
+
+CachedTarget = nil
+CachedAction = {}
+CachedBuff = nil
+
 function IsCapable(skillId)
-  local action = ActionList:Get(1, skillId)
-  return table.valid(action) and action.level <= Player.level
+  if CachedAction.id ~= skillId then
+    CachedAction = ActionList:Get(1, skillId)
+  end
+
+  return table.valid(CachedAction) and CachedAction.level <= Player.level
 end
 
 function CastOnTarget(skillId)
@@ -35,7 +45,7 @@ function CanCastOnSelf(skillId)
 end
 
 function ReadyCast(target, ...)
-  for _,v in pairs(arg) do
+  for _,v in ipairs(arg) do
     local action = ActionList:Get(1, v)
     if table.valid(action) then
       if action:IsReady(target) then
@@ -62,8 +72,7 @@ function CanCastOnTarget(skillId)
     CachedAction = ActionList:Get(1, skillId)
   end
 
-  return not CachedAction.isoncd
-    and CachedAction:IsReady(CachedTarget.id);
+  return CachedAction:IsReady(CachedTarget.id);
 end
 
 function CastOnTargetIfPossible(skillId)
