@@ -1,4 +1,19 @@
-local OpenACR = {}
+local OpenACR = {
+  routines = GetStartupPath() .. [[\LuaMods\OpenACR\routines\]],
+  GUI = {
+    visible = false,
+    open = true,
+  },
+
+  classes = {
+    [FFXIV.JOBS.NINJA] = true,
+    [FFXIV.JOBS.ROGUE] = true,
+  },
+
+  Profiles = {},
+  CurrentProfile = nil
+}
+
 local CachedTarget = nil
 local CachedAction = {}
 local CachedBuff = nil
@@ -7,168 +22,44 @@ OpenACR_IsReady = true
 
 local AwaitDo = ml_global_information.AwaitDo
 
---[[
-  Useful notes about minionlib api
+-- Adds a customizable header to the top of the ffxivminion task window.
+function OpenACR.DrawHeader()
 
-  ml_global_information has a lot of good coroutine functionality
-
-  function AwaitDo(mintimer, maxtimer, evaluator, dowhile, followall)
-    -- It will NEVER continue until evaluator is true or maxtimer
-    -- It will ONLY continue when mintimer has passed
-    -- dowhile AND followall will ALWAYS execute
-    -- evaluator determines within the time when it finishes, which then calls followall
-]]--
-
-function OpenACR.LoadBehaviorFiles()
-  local dataFiles = GetModuleFiles("data")
 end
 
-function IsCapable(skillId)
-  local action = ActionList:Get(1, skillId)
-  return table.valid(action) and action.level <= Player.level
-end
+function OpenACR.DrawCall(event, ticks)
+	local gamestate;
+	if (GetGameState and GetGameState()) then
+		gamestate = GetGameState()
+	else
+		gamestate = 3
+	end
 
-local function distToTarget()
-  return math.distance2d(Player.pos.x, Player.pos.z, CachedTarget.pos.x, CachedTarget.pos.z)
-end
-
-function CastOnTarget(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction:Cast(CachedTarget.id)
-end
-
-function CastOnSelf(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction:Cast()
-end
-
-function CanCastOnSelf(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction:IsReady()
-    and not CachedAction.isoncd
-end
-
-function IsOnCooldown(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction.isoncd
-end
-
-function CanCastOnTarget(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return not CachedAction.isoncd
-    and CachedAction:IsReady(CachedTarget.id);
-end
-
-function CastOnTargetIfPossible(skillId)
-  if CanCastOnTarget(skillId) then
-    if CastOnTarget(skillId) then
-      return true
+  if ( gamestate == FFXIV.GAMESTATE.INGAME ) then
+    OpenACR.GUI.visible, OpenACR.GUI.open = GUI:Begin("Open ACR", OpenACR.GUI.open)
+    GUI:Text("Current Class: " .. ffxivminion.classes[Player.job])
+    GUI:Separator()
+    if OpenACR.CurrentProfile ~= nil and OpenACR.CurrentProfile.Draw then
+      OpenACR.CurrentProfile.Draw()
     end
-  end
-
-  return false
+    GUI:End()
+	end
 end
 
-function CastOnSelfIfPossible(skillId)
-  if CanCastOnSelf(skillId) then
-    if CastOnSelf(skillId) then
-      return true
-    end
-  end
-
-  return false
+-- Fired when a user pressed "View Profile Options" on the main ACR window.
+function OpenACR.OnOpen()
+  -- Do some kind of flash to get their attention on the DrawCall window
+  OpenACR.GUI.open = true
 end
 
-function GetNearbyEnemies(radius)
-  local attackables = MEntityList("alive,attackable");
-  if not table.valid(attackables) then return {} end
+-- Adds a customizable footer to the top of the ffxivminion task window.
+function OpenACR.DrawFooter()
 
-  -- Gets targets within range of AOE attacks centered on player
-  local nearby = FilterByProximity(attackables, Player.pos, radius);
-  if not table.valid(nearby) then return {} end
-
-  return nearby
 end
 
-function GetACRTarget()
-  CachedTarget = Player:GetTarget()
-  return CachedTarget
+function OpenACR.ModuleInit()
+  ACR.AddPrivateProfile(OpenACR, "OpenACR")
 end
 
-function ClearCache()
-  CachedAction = {}
-  CachedBuff = nil
-  CachedTarget = nil
-end
-
-function GetTargetDebuff(buff)
-  for i,_ in ipairs(CachedTarget.buffs) do
-    if CachedTarget.buffs[i].id == buff then
-      return CachedTarget.buffs[i]
-    end
-  end
-
-  return nil
-end
-
-function GetPlayerBuff(buff)
-  for i,_ in ipairs(Player.buffs) do
-    if Player.buffs[i].id == buff then
-      return Player.buffs[i]
-    end
-  end
-
-  return nil
-end
-
-function TargetHasDebuff(debuff)
-  debuff = GetTargetDebuff(debuff)
-  return debuff ~= nil
-end
-
-function PlayerHasBuff(buff)
-  buff = GetPlayerBuff(buff)
-  return buff ~= nil
-end
-
-function LookupSkill(name)
-  for actionId, action in pairs(ActionList:Get(1)) do
-    if string.contains(string.lower(action.name), string.lower(name)) and action.level ~= 0 then
-      d(action.name .. ': ' .. tostring(actionId))
-    end
-  end
-end
-
-function ForceCast(skillId, targeted)
-  if targeted == nil then targeted = true end
-  local targetId = targeted and CachedTarget or Player.id
-  local action = ActionList:Get(1, skillId)
-
-  OpenACR_IsReady = false
-  AwaitDo(0, 1000, function()
-    return Player.lastcastid == skillId
-  end,
-  function()
-    if action:IsReady(targetId) then
-      action:Cast(targetId)
-    end
-  end,
-  function()
-    OpenACR_IsReady = true
-  end)
-end
+RegisterEventHandler("Gameloop.Draw", OpenACR.DrawCall, "OpenACR.DrawCall")
+RegisterEventHandler("Module.Initalize", OpenACR.ModuleInit, "OpenACR.ModuleInit")

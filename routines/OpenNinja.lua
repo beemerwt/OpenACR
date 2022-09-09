@@ -1,16 +1,5 @@
 -- From top to bottom, the order of operations of casting.
 local profile = {
-  GUI = {
-    open = false,
-    visible = true,
-    name = "OpenACR Ninja",
-  },
-
-  classes = {
-    [FFXIV.JOBS.NINJA] = true,
-    [FFXIV.JOBS.ROGUE] = true,
-  },
-
   ComboEnabled       = true,
   NinkiEnabled       = true,
   NinjutsuEnabled    = true,
@@ -24,15 +13,6 @@ local profile = {
   ACEnabled          = true
 }
 
--- TODO: Check for Bunshin buff,
---  specifically use Assassinate during that time
---  especially if TrickAttack is up.
---  Bunshin has 90s CD, TA is 60s and lasts 15s.
---  If we can save ~20s from TA being up, we can use bunshin within that 5s interval and use assassinate for BIG damage
---  We want to make sure the first Bunshin we do is within that 
-
--- TODO: Add Feint
--- TODO: Add Shukuchi
 local AwaitDo = ml_global_information.AwaitDo
 local AwaitThen = ml_global_information.AwaitThen
 
@@ -57,7 +37,6 @@ local PvPSkills = {
   ForkedRaiju   = 29510,
 }
 
--- TODO: Use non-GCD skills in same loop
 local Skills = {
   ShadeShift      = 2241,
   Hide            = 2245,
@@ -111,8 +90,6 @@ local Skills = {
   Hellfrog        = 7401  -- NO GCD
 }
 
--- If it's not enabled it's not a part of the IcyVeins rotation...
--- devnote: elements without a key are stacked from 1 - inf
 local Mudras = {
   Fuma   = { 'ten', 'ten' },
   Katon  = { 'chi', 'ten' },
@@ -125,7 +102,6 @@ local Mudras = {
   Suiton = { 'ten', 'chi', 'jin' },
 }
 
--- TODO: Handle Mug the same
 local function TrickAttackIsActive()
   return activeTrickAttack ~= nil
 end
@@ -140,23 +116,16 @@ local function ComboMudra()
   if #MudraQueue == 0 then return false end
   if TimeSince(StartMudra) >= 6000 then return false end
 
-  local next = MudraQueue[1] == 'ten' and Skills.Ten
-    or MudraQueue[1] == 'chi' and Skills.Chi
-    or MudraQueue[1] == 'jin' and Skills.Jin
-
-  if PlayerHasBuff(Buffs.Mudra) then
-    next = next == Skills.Ten and Skills.MudraTen
-      or next == Skills.Chi and Skills.MudraChi
-      or next == Skills.Jin and Skills.MudraJin
+  local wasCast = false
+  if MudraQueue[1] == 'ten' then
+    wasCast = ReadyCast(Player.id, Skills.Ten, Skills.MudraTen)
+  elseif MudraQueue[1] == 'chi' then
+    wasCast = ReadyCast(Player.id, Skills.Chi, Skills.MudraChi)
+  elseif MudraQueue[1] == 'jin' then
+    wasCast = ReadyCast(Player.id, Skills.Jin, Skills.MudraJin)
   end
 
-  local action = ActionList:Get(1, next)
-  if action:IsReady(Player.id) then
-    if action:Cast(Player.id) then
-      table.remove(MudraQueue, 1)
-    end
-  end
-
+  if wasCast then table.remove(MudraQueue, 1) end
   return true
 end
 
@@ -165,11 +134,6 @@ local function QueueMudra(mudra)
   StartMudra = Now()
   return true
 end
-
--- Notes...
--- Huton:IsReady(Player) will be true upon it being ready
--- Raiton:IsReady(Target) will be true upon it being ready, It will ALSO be ready on the Player.
--- Suiton:IsReady(Target) the same as Raiton ^
 
 local function Opener()
   -- 11 seconds before pull JCT -> Huton
@@ -447,39 +411,17 @@ end
 
 -- The Draw() function provides a place where a developer can show custom options.
 function profile.Draw()
-  if not profile.GUI.open then return end
-
-  profile.GUI.visible, profile.GUI.open = GUI:Begin(profile.GUI.name, profile.GUI.open)
-  if profile.GUI.visible then
-    profile.AOEEnabled = GUI:Checkbox("AOE Enabled", profile.AOEEnabled)
-    profile.ComboEnabled = GUI:Checkbox("Combo Enabled", profile.ComboEnabled)
-    profile.NinkiEnabled = GUI:Checkbox("Ninki Enabled", profile.NinkiEnabled)
-    profile.NinjutsuEnabled = GUI:Checkbox("Ninjutsu Enabled", profile.NinjutsuEnabled)
-    profile.RaijuEnabled = GUI:Checkbox("Raiju Enabled", profile.RaijuEnabled)
-    profile.TCJEnabled = GUI:Checkbox("Ten Chi Jin", profile.TCJEnabled)
-    profile.ACEnabled = GUI:Checkbox("Armor Crush", profile.ACEnabled)
-    profile.ThrowingEnabled = GUI:Checkbox("Throwing Dagger", profile.ThrowingEnabled)
-    profile.AssassinateEnabled = GUI:Checkbox("Assassinate", profile.AssassinateEnabled)
-    profile.MeisuiEnabled = GUI:Checkbox("Meisui", profile.MeisuiEnabled)
-    profile.TAEnabled = GUI:Checkbox("Trick Attack", profile.TAEnabled)
-  end
-  GUI:End()
-end
-
--- Adds a customizable header to the top of the ffxivminion task window.
-function profile.DrawHeader()
-
-end
-
--- Adds a customizable footer to the top of the ffxivminion task window.
-function profile.DrawFooter()
-
-end
-
--- The OnOpen() function is fired when a user pressed "View Profile Options" on the main ACR window.
-function profile.OnOpen()
-  -- Set our GUI table //open// variable to true so that it will be drawn.
-  profile.GUI.open = true
+  profile.AOEEnabled = GUI:Checkbox("AOE Enabled", profile.AOEEnabled)
+  profile.ComboEnabled = GUI:Checkbox("Combo Enabled", profile.ComboEnabled)
+  profile.NinkiEnabled = GUI:Checkbox("Ninki Enabled", profile.NinkiEnabled)
+  profile.NinjutsuEnabled = GUI:Checkbox("Ninjutsu Enabled", profile.NinjutsuEnabled)
+  profile.RaijuEnabled = GUI:Checkbox("Raiju Enabled", profile.RaijuEnabled)
+  profile.TCJEnabled = GUI:Checkbox("Ten Chi Jin", profile.TCJEnabled)
+  profile.ACEnabled = GUI:Checkbox("Armor Crush", profile.ACEnabled)
+  profile.ThrowingEnabled = GUI:Checkbox("Throwing Dagger", profile.ThrowingEnabled)
+  profile.AssassinateEnabled = GUI:Checkbox("Assassinate", profile.AssassinateEnabled)
+  profile.MeisuiEnabled = GUI:Checkbox("Meisui", profile.MeisuiEnabled)
+  profile.TAEnabled = GUI:Checkbox("Trick Attack", profile.TAEnabled)
 end
 
 -- The OnLoad() function is fired when a profile is prepped and loaded by ACR.
