@@ -2,5 +2,5 @@
 Name=OpenACR
 Dependencies=minionlib
 Version=1
-Files=OpenACR.lua,CombatRoutines/Ninja.lua
+Files=OpenACR.lua,OpenUtils.lua,CombatRoutines/Ninja.lua
 Enabled=1
