@@ -2,5 +2,5 @@
 Name=OpenACR
 Dependencies=minionlib
 Version=1
-Files=OpenACR.lua,OpenUtils.lua,OpenDamage.lua,OpenTank.lua,OpenHeals.lua,routines/Ninja.lua
+Files=OpenACR.lua,OpenUtils.lua,OpenUtils.lua,OpenDamage.lua,OpenTank.lua,OpenHeals.lua,routines/Ninja.lua
 Enabled=1
