@@ -13,16 +13,13 @@ local profile = {
   ACEnabled          = true
 }
 
-local AwaitDo = ml_global_information.AwaitDo
-local AwaitThen = ml_global_information.AwaitThen
-
 local activeTrickAttack = nil
 
 local Buffs = {
   Mudra       = 496,
   TrickAttack = 3254,
   Mug         = 638,
-  RaijuReady  = 0,
+  RaijuReady  = 2690,
   Doton       = 501,
   Kassatsu    = 497,
   Suiton      = 507,
@@ -40,7 +37,6 @@ local PvPSkills = {
 local Skills = {
   ShadeShift      = 2241,
   Hide            = 2245,
-  Assassinate     = 2246,
   ThrowingDagger  = 2247,
   Mug             = 2248,
   TrickAttack     = 2258,
@@ -51,25 +47,40 @@ local Skills = {
   Bloodbath       = 7542, -- No GCD
   Kamaitachi      = 16493,
   DreamWithinADream = 3566, -- No GCD
+  Assassinate     = 2246,
 
   -- Mudras/Ninjutsu
   Ninjutsu = 2260,
   Ten      = 2259,
-  Chi      = 2261,
-  Jin      = 2263,
   MudraTen = 18805,
+  Chi      = 2261,
   MudraChi = 18806,
+  Jin      = 2263,
   MudraJin = 18807,
-  Fuma     = 2265,
-  Katon    = 2266,
-  Raiton   = 2267,
-  Hyoton   = 2268,
-  Hyosho   = 16492,
-  Goka     = 16491,
-  Doton    = 2270,
-  Huton    = 2269,
-  Suiton   = 2271,
-  Kassatsu = 2264,
+
+  Fuma        = 2265,
+  TCJFuma     = 18873,
+
+  Katon       = 2266,
+  MudraKaton  = 18876,
+
+  Raiton      = 2267,
+  TCJRaiton   = 18877,
+
+  Suiton      = 2271,
+  TCJSuiton   = 18881,
+
+  Hyosho      = 16492,
+  Goka        = 16491,
+  Hyoton      = 2268,
+  MudraHyoton = 18878,
+  Doton       = 2270,
+  MudraDoton  = 18880,
+  Huton       = 2269,
+  MudraHuton  = 18879,
+
+
+  Kassatsu    = 2264,
 
   -- Raijus
   ForkedRaiju     = 25777,
@@ -284,13 +295,23 @@ local function MugIsActive()
   return mug ~= nil
 end
 
+local usedFuma = false
+local usedRaiton = false
+local usedSuiton = false
 local function TCJ()
   if not TrickAttackIsActive() and not MugIsActive() then return false end
 
     -- We only ever want to do this if Meisui is up
   if profile.MeisuiEnabled and IsOnCooldown(Skills.Meisui) then return false end
 
-  return CastOnSelfIfPossible(Skills.TenChiJin)
+  if CastOnSelfIfPossible(Skills.TenChiJin) then
+    usedFuma = false
+    usedRaiton = false
+    usedSuiton = false
+    return true
+  end
+
+  return false
 end
 
 -- The Cast() function is where the magic happens.
@@ -305,9 +326,6 @@ function profile.Cast()
   -- ensures we're getting newest state of any actions
   ClearCache()
 
-  -- TODO: Add Feint
-  -- TODO: Add Shukuchi
-
   local target = GetACRTarget()
   if target == nil then return false end
   if not target.attackable then return false end
@@ -319,9 +337,27 @@ function profile.Cast()
   local playerHasKamaitachi = PlayerHasBuff(Buffs.KamaitachiReady)
 
   if playerHasTCJ then
-    if CastOnTarget(Skills.Ten) then return true end
-    if CastOnTarget(Skills.Chi) then return true end
-    if CastOnTarget(Skills.Jin) then return true end
+    if not usedFuma then
+      if CastOnTargetIfPossible(Skills.TCJFuma) then
+        usedFuma = true
+        return true
+      end
+    end
+
+    if not usedRaiton then
+      if CastOnTargetIfPossible(Skills.TCJRaiton) then
+        usedRaiton = true
+        return true
+      end
+    end
+
+    if not usedSuiton then
+      if CastOnTargetIfPossible(Skills.TCJSuiton) then
+        usedSuiton = true
+        return true
+      end
+    end
+
     return false
   end
 
@@ -370,7 +406,7 @@ function profile.Cast()
 
   if profile.AssassinateEnabled then
     if TrickAttackIsActive() and #nearby < 3 then
-      if CastOnTargetIfPossible(Skills.Assassinate) then return true end
+      if ReadyCast(target.id, Skills.Assassinate, Skills.DreamWithinADream) then return true end
     end
   end
 
