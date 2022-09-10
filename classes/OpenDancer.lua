@@ -1,27 +1,78 @@
 local profile = {
-
+  AutoPartner = true,
+  AutoPeloton = true,
 }
 
 local Buffs = {
-
+  ClosedPosition = 1823,
+  Peloton = 1199,
+  SilkenSymmetry = 2693, -- Reverse Cascade
 }
 
 local Skills = {
+  ClosedPosition = 16006,
+  Peloton = 7557,
 
+  Cascade = 15989,
+  ReverseCascade = -1
 }
 
 local function GetBestDancePartner()
+  if PartyMembers == nil then return nil end
   -- Ninja → Reaper/Monk → Dragoon/Samurai → Black Mage/Red Mage → Summoner → Machinist → Bard → Dancer
+  local rating = 0
+  local member = nil
+
+  for k,v in pairs(PartyMembers) do
+    -- If they are a ninja, just use them
+    if v.job == FFXIV.JOBS.NINJA then return v end
+    local vrating = v.job == FFXIV.JOBS.REAPER and 7
+      or v.job == FFXIV.JOBS.MONK and 7
+      or v.job == FFXIV.JOBS.DRAGOON and 6
+      or v.job == FFXIV.JOBS.SAMURAI and 6
+      or v.job == FFXIV.JOBS.BLACKMAGE and 5
+      or v.job == FFXIV.JOBS.REDMAGE and 5
+      or v.job == FFXIV.JOBS.SUMMONER and 4
+      or v.job == FFXIV.JOBS.MACHINIST and 3
+      or v.job == FFXIV.JOBS.BARD and 2
+      or v.job == FFXIV.JOBS.DANCER and 1
+      or 0
+
+    if vrating > rating then
+      member = v
+      rating = vrating
+    end
+  end
+
+  return member
 end
 
-function profile.Cast()
+function profile.Cast(target)
+  local playerHasPartner = HasBuff(Player.id, Buffs.ClosedPosition)
+  local playerHasPeloton = HasBuff(Player.id, Buffs.Peloton)
+
+  if profile.AutoPeloton and Player:IsMoving() and not playerHasPeloton then
+    if ReadyCast(Player.id, Skills.Peloton) then return true end
+  end
+
+  if profile.AutoPartner and not playerHasPartner then
+    local partner = GetBestDancePartner()
+    if partner ~= nil then
+      if ReadyCast(partner.id, Skills.ClosedPosition) then return true end
+    end
+  end
+
+
 end
 
 function profile.Draw()
+  profile.AutoPartner = GUI:Checkbox("Auto Partner", profile.AutoPartner)
+  profile.AutoPeloton = GUI:Checkbox("Auto Peloton", profile.AutoPeloton)
 end
 
 function profile.OnLoad()
-
+  profile.AutoPeloton = ACR.GetSetting("OpenACR_Dancer_AutoPeloton", true)
+  profile.AutoPartner = ACR.GetSetting("OpenACR_Dancer_AutoPartner", true)
 end
 
 return profile
