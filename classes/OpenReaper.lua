@@ -24,6 +24,7 @@ local Skills = {
   Gallows = 24383,
   Guillotine = 24384,
   Enshroud = 24394,
+  BloodStalk = 24389,
 
   SoulSlice = 24380,
   SoulScythe = 24381,
