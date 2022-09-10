@@ -1,2 +1,6 @@
 local Tank = {}
-OpenACR.Tank = Tank
+
+function Tank.Defensives()
+end
+
+return Tank

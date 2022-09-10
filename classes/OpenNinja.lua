@@ -1,4 +1,3 @@
--- From top to bottom, the order of operations of casting.
 local profile = {
   ComboEnabled       = true,
   NinkiEnabled       = true,
@@ -43,8 +42,6 @@ local Skills = {
   Shukuchi        = 2262,
   ArmorCrush      = 3563,
   TenChiJin       = 7403,
-  SecondWind      = 7541,
-  Bloodbath       = 7542, -- No GCD
   Kamaitachi      = 16493,
   DreamWithinADream = 3566, -- No GCD
   Assassinate     = 2246,
@@ -316,19 +313,8 @@ end
 
 -- The Cast() function is where the magic happens.
 -- Action code should be called and fired here.
-function profile.Cast()
-  if not OpenACR_IsReady then return false end
-  if Player == nil then return false end
-  if not ActionList:IsReady() then return false end
-
+function profile.Cast(target)
   if ComboMudra() then return true end
-
-  -- ensures we're getting newest state of any actions
-  ClearCache()
-
-  local target = GetACRTarget()
-  if target == nil then return false end
-  if not target.attackable then return false end
 
   activeTrickAttack = GetTargetDebuff(Buffs.TrickAttack)
 
@@ -376,10 +362,6 @@ function profile.Cast()
   local nearby = GetNearbyEnemies(10)
 
   if MaintainHuton() then return true end
-
-  if Player.hp.percent < 35 then
-    if CastOnSelfIfPossible(Skills.Bloodbath) then return true end
-  end
 
   if profile.RaijuEnabled then
     if UseRaiju(#nearby) then

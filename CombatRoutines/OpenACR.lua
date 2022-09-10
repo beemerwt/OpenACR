@@ -10,15 +10,18 @@ OpenACR = {
 
   classes = {
     [FFXIV.JOBS.NINJA] = true,
-    [FFXIV.JOBS.ROGUE] = true
+    [FFXIV.JOBS.ROGUE] = true,
+    [FFXIV.JOBS.SAMURAI] = true,
   },
 
   -- All of the jobs implemented so far...
   profiles = {
     [FFXIV.JOBS.NINJA] = "OpenNinja.lua",
     [FFXIV.JOBS.ROGUE] = "OpenNinja.lua",
+    [FFXIV.JOBS.SAMURAI] = "OpenSamurai.lua",
   },
 
+  CurrentRole = nil,
   CurrentProfile = nil,
 }
 
@@ -53,70 +56,96 @@ function OpenACR.DrawFooter()
 end
 
 function OpenACR.Cast()
+  if Player == nil then return false end
+  if not ActionList:IsReady() then return false end
+
+  -- ensures we're getting newest state of any actions
+  ClearCache()
+
+  local target = GetACRTarget()
+  if target == nil then return false end
+  if not target.attackable then return false end
+
+  -- TODO: Make HP Percent adjustable
+  if OpenACR.CurrentRole and Player.hp.percent < 35 then
+    if OpenACR.CurrentRole.Defensives() then return true end
+  end
+
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Cast then
-    OpenACR.CurrentProfile.Cast()
+    if OpenACR.CurrentProfile.Cast(target) then return true end
   end
 end
 
 function OpenACR.Draw()
   OpenACR.GUI.visible, OpenACR.GUI.open = GUI:Begin(OpenACR.GUI.name, OpenACR.GUI.open)
 
-  GUI:AlignFirstTextHeightToWidgets()
-
-  -- GUI:SetColumnWidth(-1, GUI:GetWindowWidth())
+  GUI:Text("Current Role: " .. GetRoleString(Player.job))
   GUI:Text("Current Class: " .. ffxivminion.classes[Player.job])
 
-  GUI:PushItemWidth(-1.0)
-  if GUI:Button("Reload") then OpenACR.ReloadProfile() end
-  GUI:PopItemWidth()
+  if GUI:Button("Reload Role") then OpenACR.ReloadRole() end
+  GUI:SameLine()
+  if GUI:Button("Reload Profile") then OpenACR.ReloadProfile() end
+
+  if OpenACR.CurrentRole ~= nil then
+    GUI:Separator()
+    GUI:Text("Role")
+    OpenACR.CurrentRole.Draw()
+  end
 
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Draw then
     GUI:Separator()
+    GUI:Text("Class")
     OpenACR.CurrentProfile.Draw()
   end
 
   GUI:End()
 end
 
-local isNoticeActive = false
 function OpenACR.OnUpdate(event, tickcount)
-  --[[
-  if OpenACR.CurrentProfile == nil and not isNoticeActive then
-    isNoticeActive = true
-    ffxiv_dialog_manager.IssueStopNotice("OpenACR", "A profile for this class does not exist or was unable to load.")
-  end
-  ]]--
 end
 
 function OpenACR.OnLoad()
-  local jobId = Player.job
-  OpenACR.CurrentProfile = OpenACR.LoadProfile(jobId)
-  if OpenACR.CurrentProfile and OpenACR.CurrentProfile.OnLoad then
-    OpenACR.CurrentProfile.OnLoad()
-  end
+  OpenACR.ReloadRole()
+  OpenACR.ReloadProfile()
 end
 
 -- Just reloads the profile file for player's current job
 function OpenACR.ReloadProfile()
-  log('Reloading profile')
-  OpenACR.OnLoad()
-end
-
--- Loads profile from jobId
-function OpenACR.LoadProfile(jobId)
+  local jobId = Player.job
   log('Loading profile ' .. ffxivminion.classes[jobId])
   if not OpenACR.profiles[jobId] then
     log("Tried loading " .. jobId .. " but no profile was available.")
-    return nil
+    return
   end
 
   local profile, errorMessage = loadfile(OpenACR.MainPath .. [[\classes\]] .. OpenACR.profiles[jobId], "t")
   if profile then
-    return profile()
+    OpenACR.CurrentProfile = profile()
+    if OpenACR.CurrentProfile and OpenACR.CurrentProfile.OnLoad then
+      OpenACR.CurrentProfile.OnLoad()
+    end
+  else
+    log('An error occurred while loading ' .. ffxivminion.classes[jobId] .. ' profile...')
+    log(errorMessage)
   end
+end
 
-  -- ffxiv_dialog_manager.IssueNotice("Unable to load profile for " .. ffxivminion.classes[jobId], errorMessage)
-  return nil
+function OpenACR.ReloadRole()
+  local rolestr = GetRoleString(Player.job)
+  local rolefile = rolestr == "DPS" and "Damage.lua"
+    or rolestr == "Healer" and "Healer.lua"
+    or rolestr == "Tank" and "Tank.lua"
+
+  local role, roleError = loadfile(OpenACR.MainPath .. [[\roles\]] .. rolefile, "t")
+  if role then
+    OpenACR.CurrentRole = role()
+    if OpenACR.CurrentRole and OpenACR.CurrentRole.OnLoad then
+      OpenACR.CurrentRole.OnLoad()
+    end
+  else
+    log('An error occurred while loading ' .. rolestr .. ' role...')
+    log(roleError)
+  end
 end
 
 -- Return the profile to ACR, so it can be read.

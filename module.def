@@ -2,5 +2,5 @@
 Name=OpenACR
 Dependencies=minionlib
 Version=1
-Files=CombatRoutines/OpenACR.lua,OpenUtils.lua,roles/Tank.lua,roles/Heals.lua,roles/Damage.lua
+Files=CombatRoutines/OpenACR.lua,OpenUtils.lua
 Enabled=1
