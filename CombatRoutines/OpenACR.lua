@@ -12,6 +12,7 @@ OpenACR = {
     [FFXIV.JOBS.NINJA] = true,
     [FFXIV.JOBS.ROGUE] = true,
     [FFXIV.JOBS.SAMURAI] = true,
+    [FFXIV.JOBS.REAPER] = true,
   },
 
   -- All of the jobs implemented so far...
@@ -19,6 +20,7 @@ OpenACR = {
     [FFXIV.JOBS.NINJA] = "OpenNinja.lua",
     [FFXIV.JOBS.ROGUE] = "OpenNinja.lua",
     [FFXIV.JOBS.SAMURAI] = "OpenSamurai.lua",
+    [FFXIV.JOBS.REAPER] = "OpenReaper.lua",
   },
 
   CurrentRole = nil,
