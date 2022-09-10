@@ -20,28 +20,12 @@ function IsCapable(skillId)
   return table.valid(CachedAction) and CachedAction.level <= Player.level
 end
 
-function CastOnTarget(skillId)
+function IsOnCooldown(skillId)
   if CachedAction.id ~= skillId then
     CachedAction = ActionList:Get(1, skillId)
   end
 
-  return CachedAction:Cast(CachedTarget.id)
-end
-
-function CastOnSelf(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction:Cast()
-end
-
-function CanCastOnSelf(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction:IsReady()
+  return CachedAction.isoncd
 end
 
 function ReadyCast(target, ...)
@@ -53,42 +37,6 @@ function ReadyCast(target, ...)
           return true
         end
       end
-    end
-  end
-
-  return false
-end
-
-function IsOnCooldown(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction.isoncd
-end
-
-function CanCastOnTarget(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction:IsReady(CachedTarget.id);
-end
-
-function CastOnTargetIfPossible(skillId)
-  if CanCastOnTarget(skillId) then
-    if CastOnTarget(skillId) then
-      return true
-    end
-  end
-
-  return false
-end
-
-function CastOnSelfIfPossible(skillId)
-  if CanCastOnSelf(skillId) then
-    if CastOnSelf(skillId) then
-      return true
     end
   end
 
