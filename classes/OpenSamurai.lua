@@ -15,6 +15,7 @@ local Skills = {
   Yukikaze = 7480,
   Hakaze = 7477,
   Higanbana = 7489,
+  TenkaGoken = 7488,
 
   HissatsuSenei = 16481,
   HissatsuShinten = 7490,
@@ -76,6 +77,100 @@ local Combos = {
   SenSetsu = { Skills.Hakaze, Skills.Yukikaze }
 }
 
+local nearby = {}
+
+local function GetSen()
+  local sen = Player.gauge[2]
+  local setsu = math.floor(sen / 1) % 2 == 1
+  local getsu = math.floor(sen / 2) % 2 == 1
+  local ka    = math.floor(sen / 4) % 2 == 1
+  return setsu, getsu, ka
+end
+
+local function BasicCombo(target)
+  local sen = Player.gauge[2]
+  local setsu = math.floor(sen / 1) % 2 == 1
+  local getsu = math.floor(sen / 2) % 2 == 1
+  local ka    = math.floor(sen / 4) % 2 == 1
+
+  -- Perform final part of combo
+  if setsu and getsu and ka then
+    if ReadyCast(target.id, Skills.MidareSetsugekka) then return true end
+  elseif sen > 3 and #nearby > 2 then
+    if ReadyCast(target.id, Skills.TenkaGoken) then return true end
+  end
+
+  -- Maintain buffs and debuffs
+  local playerHasFuka = PlayerHasBuff(Buffs.Fuka)
+  local playerHasFugetsu = PlayerHasBuff(Buffs.Fugetsu)
+  local targetHiganbana = GetTargetDebuff(Buffs.Higanbana)
+
+  if not targetHiganbana and Player.lastcomboid == Skills.Hakaze then
+    if ReadyCast(target.id, Skills.Higanbana) then return true end
+    return false
+  end
+
+  -- Ending of Combo (Above all, don't waste the GCD it took to get here)
+  if Player.lastcomboid == Skills.Shifu then
+    if ReadyCast(target.id, Skills.Kasha) then return true end
+  elseif Player.lastcomboid == Skills.Jinpu then
+    if ReadyCast(target.id, Skills.Gekko) then return true end
+  end
+
+  -- Intermittent stage of combo
+  if Player.lastcomboid == Skills.Hakaze and Player.timesincecast < 30000 then
+    -- Generate setsu
+    if not setsu then
+      if ReadyCast(target.id, Skills.Yukikaze) then return true end
+    end
+
+    -- Get Fuka status, will finish combo in next loop
+    if not playerHasFuka then
+      -- ensure that we aren't using this before refreshing Midare
+      if (not setsu and not ka) and (not getsu and not ka) then
+        if ReadyCast(target.id, Skills.Shifu) then return true end
+      end
+    end
+
+    -- Get Fugetsu, will finish combo in next loop
+    if not playerHasFugetsu then
+      -- ensure that we aren't using this before refreshing Midare
+      if (not setsu and not getsu) and (not ka and not getsu) then
+        if ReadyCast(target.id, Skills.Jinpu) then return true end
+      end
+    end
+
+    return false
+  elseif Player.lastcomboid == Skills.Fuga then
+    -- Get Fuka, will finish combo in next loop
+    if not playerHasFuka then
+      -- ensure that we aren't using this before refreshing Midare
+      if (not setsu and not ka) and (not getsu and not ka) then
+        if ReadyCast(target.id, Skills.Oka) then return true end
+      end
+    end
+
+    -- Get Fugetsu, will finish combo in next loop
+    if not playerHasFugetsu then
+      -- ensure that we aren't using this before refreshing Midare
+      if (not setsu and not ka) and (not getsu and not ka) then
+        if ReadyCast(target.id, Skills.Mangetsu) then return true end
+      end
+    end
+
+    return false
+  end
+
+  -- Perform start of combo
+  if profile.AOEEnabled and #nearby > 2 and (not ka and not getsu) then
+    if ReadyCast(target.id, Skills.Fuga) then return true end
+  else
+    if ReadyCast(target.id, Skills.Hakaze) then return true end
+  end
+
+  return false
+end
+
 local CurrentCombo = {}
 function profile.Cast(target)
   if #CurrentCombo > 0 then
@@ -96,41 +191,9 @@ function profile.Cast(target)
     return false
   end
 
-  local nearby = GetNearbyEnemies(10)
-
-  -- Maintain buffs and debuffs
-  local targetHiganbana = GetTargetDebuff(Buffs.Higanbana)
-  local playerHasFuka = PlayerHasBuff(Buffs.Fuka)
-  local playerHasFugetsu = PlayerHasBuff(Buffs.Fugetsu)
-
-  if not targetHiganbana or targetHiganbana.duration < 8 then
-    CurrentCombo = table.shallowcopy(Combos.SenSetsu)
-    table.insert(CurrentCombo, Skills.Higanbana)
-    return true
-  end
-
-  if #nearby > 1 and profile.AOEEnabled then
-    if not playerHasFuka then
-      CurrentCombo = table.shallowcopy(Combos.FugaOka)
-      return true
-    end
-
-    if not playerHasFugetsu then
-      CurrentCombo = table.shallowcopy(Combos.FugaMangetsu)
-      return true
-    end
-  else
-    if not playerHasFuka then
-      CurrentCombo = table.shallowcopy(Combos.SenKa)
-      return true
-    end
-
-    if not playerHasFugetsu then
-      CurrentCombo = table.shallowcopy(Combos.SenGetsu)
-      return true
-    end
-  end
-
+  nearby = GetNearbyEnemies(10)
+  if BasicCombo(target) then return true end
+  
   return false
 end
 
