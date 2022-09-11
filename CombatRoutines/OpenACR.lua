@@ -25,19 +25,19 @@ OpenACR = {
   -- All of the jobs implemented so far...
   profiles = {
     -- Base classes
-    [FFXIV.JOBS.ROGUE] = "OpenRogue.lua",
-    [FFXIV.JOBS.PUGILIST] = "OpenPugilist.lua",
-    [FFXIV.JOBS.LANCER] = "OpenLancer.lua",
+    [FFXIV.JOBS.ROGUE] = "Rogue.lua",
+    [FFXIV.JOBS.PUGILIST] = "Pugilist.lua",
+    [FFXIV.JOBS.LANCER] = "Lancer.lua",
 
     -- Advanced classes
-    [FFXIV.JOBS.NINJA] = "OpenNinja.lua",
-    [FFXIV.JOBS.MONK] = "OpenMonk.lua",
-    [FFXIV.JOBS.DRAGOON] = "OpenDragoon.lua",
+    [FFXIV.JOBS.NINJA] = "Ninja.lua",
+    [FFXIV.JOBS.MONK] = "Monk.lua",
+    [FFXIV.JOBS.DRAGOON] = "Dragoon.lua",
 
     -- Special classes
-    [FFXIV.JOBS.SAMURAI] = "OpenSamurai.lua",
-    [FFXIV.JOBS.REAPER] = "OpenReaper.lua",
-    [FFXIV.JOBS.DANCER] = "OpenDancer.lua",
+    [FFXIV.JOBS.SAMURAI] = "Samurai.lua",
+    [FFXIV.JOBS.REAPER] = "Reaper.lua",
+    [FFXIV.JOBS.DANCER] = "Dancer.lua",
   },
 
   CurrentRole = nil,
