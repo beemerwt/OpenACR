@@ -4,7 +4,7 @@ OpenACR = {
 
   GUI = {
     name = "OpenACR",
-    visible = false,
+    visible = true,
     open = true,
   },
 
@@ -95,25 +95,29 @@ function OpenACR.Cast()
 end
 
 function OpenACR.Draw()
-  OpenACR.GUI.visible, OpenACR.GUI.open = GUI:Begin(OpenACR.GUI.name, OpenACR.GUI.open)
+  if not OpenACR.GUI.open then return end
 
-  GUI:Text("Current Role: " .. GetRoleString(Player.job))
-  GUI:Text("Current Class: " .. ffxivminion.classes[Player.job])
+  OpenACR.GUI.visible, OpenACR.GUI.open = GUI:Begin(OpenACR.GUI.name, OpenACR.GUI.open, GUI.WindowFlags_NoResize)
 
-  if GUI:Button("Reload Role") then OpenACR.ReloadRole() end
-  GUI:SameLine()
-  if GUI:Button("Reload Profile") then OpenACR.ReloadProfile() end
+  if OpenACR.GUI.visible then
+    GUI:Text("Current Role: " .. GetRoleString(Player.job))
+    GUI:Text("Current Class: " .. ffxivminion.classes[Player.job])
 
-  if OpenACR.CurrentRole ~= nil then
-    GUI:Separator()
-    GUI:Text("Role")
-    OpenACR.CurrentRole:Draw()
-  end
+    if GUI:Button("Reload Role") then OpenACR.ReloadRole() end
+    GUI:SameLine()
+    if GUI:Button("Reload Profile") then OpenACR.ReloadProfile() end
 
-  if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Draw then
-    GUI:Separator()
-    GUI:Text("Class")
-    OpenACR.CurrentProfile:Draw()
+    if OpenACR.CurrentRole ~= nil then
+      GUI:Separator()
+      GUI:Text("Role")
+      OpenACR.CurrentRole:Draw()
+    end
+
+    if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Draw then
+      GUI:Separator()
+      GUI:Text("Class")
+      OpenACR.CurrentProfile:Draw()
+    end
   end
 
   GUI:End()
