@@ -19,8 +19,10 @@ OpenACR = {
 
   -- All of the jobs implemented so far...
   profiles = {
-    [FFXIV.JOBS.ROGUE] = "OpenNinja.lua",
+    -- Base classes
+    [FFXIV.JOBS.ROGUE] = "OpenRogue.lua",
     [FFXIV.JOBS.PUGILIST] = "OpenPugilist.lua",
+
     [FFXIV.JOBS.NINJA] = "OpenNinja.lua",
     [FFXIV.JOBS.SAMURAI] = "OpenSamurai.lua",
     [FFXIV.JOBS.REAPER] = "OpenReaper.lua",
