@@ -1,4 +1,6 @@
-local Marauder = {}
+local Marauder = {
+  AOE = true,
+}
 
 local Buffs = {
   SurgingTempest = -1,
