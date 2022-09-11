@@ -114,51 +114,21 @@ local function TrickAttackIsActive()
   return activeTrickAttack ~= nil
 end
 
+local function MugIsActive()
+  local mug = GetTargetDebuff(Buffs.Mug)
+  return mug ~= nil
+end
+
 local function IsNinjutsuReady()
   return PlayerHasBuff(Buffs.Kassatsu) or not IsOnCooldown(Skills.Ten)
 end
 
 local StartMudra = 0
 local MudraQueue = {}
-local function ComboMudra()
-  if #MudraQueue == 0 then return false end
-  if TimeSince(StartMudra) >= 6000 then return false end
-
-  local wasCast = false
-  if MudraQueue[1] == 'ten' then
-    wasCast = ReadyCast(Player.id, Skills.Ten, Skills.MudraTen)
-  elseif MudraQueue[1] == 'chi' then
-    wasCast = ReadyCast(Player.id, Skills.Chi, Skills.MudraChi)
-  elseif MudraQueue[1] == 'jin' then
-    wasCast = ReadyCast(Player.id, Skills.Jin, Skills.MudraJin)
-  end
-
-  if wasCast then table.remove(MudraQueue, 1) end
-  return true
-end
-
 local function QueueMudra(mudra)
   MudraQueue = table.shallowcopy(mudra)
   StartMudra = Now()
   return true
-end
-
-local function Opener()
-  -- 11 seconds before pull JCT -> Huton
-  -- Hide
-  -- TCJ -> Suiton cast 1s before pull
-  -- At 1 second on the countdown, use Suiton Icon Suiton then immediately use Kassatsu
-  -- Spinning Edge -> Grade 6 Tincture of Dexterity
-  -- Gust Slash -> Mug -> Bunshin
-  -- Phantom Kamaitachi -> late weave Trick Attack Icon Trick Attack
-  -- Aeolian Edge -> Dream Within a Dream
-  -- Hyosho Ranryu
-  -- Raiton -> Ten Chi Jin
-  -- Fuma Shuriken -> Raiton -> Suiton -> Meisui
-  -- Fleeting Raiju ->Bhavacakra Icon Bhavacakra
-  -- Fleeting Raiju ->Bhavacakra Icon Bhavacakra
-  -- Raiton
-  -- Fleeting Raiju
 end
 
 local function Ninjutsu(numNearby)
@@ -174,11 +144,13 @@ local function Ninjutsu(numNearby)
       return QueueMudra(Mudras.Goka);
     end
 
-    return QueueMudra(Mudras.Katon);
+    if IsCapable(Skills.Katon) then
+      return QueueMudra(Mudras.Katon);
+    end
   end
 
   -- Use Suiton to set up Trick Attack when there is less than 20 seconds left on Trick Attack's cooldown.
-  if not PlayerHasBuff(Buffs.Suiton) then
+  if not PlayerHasBuff(Buffs.Suiton) and IsCapable(Skills.Suiton) then
     local TrickAttack = ActionList:Get(1, Skills.TrickAttack)
     if TrickAttack.cdmax - TrickAttack.cd < 20 then
       return QueueMudra(Mudras.Suiton)
@@ -203,109 +175,36 @@ local function Ninjutsu(numNearby)
     return QueueMudra(Mudras.Raiton)
   end
 
-  return QueueMudra(Mudras.Fuma)
-end
-
-local function BasicCombo(numNearby)
-  if numNearby > 2 and profile.AOEEnabled then
-    if Player.lastcomboid == Skills.DeathBlossom then
-      return CastOnSelfIfPossible(Skills.HakkeMujinsatsu)
-    else
-      return CastOnSelfIfPossible(Skills.DeathBlossom)
-    end
-  else
-    -- If you have more than 30 seconds left on your Huton buff
-    --  use Aeolian Edge as your combo ender instead.
-    if Player.lastcomboid == Skills.GustSlash and Player.gauge[2] > 30000 then
-      return CastOnTargetIfPossible(Skills.AeolianEdge)
-    elseif Player.lastcomboid == Skills.SpinningEdge then
-      return CastOnTargetIfPossible(Skills.GustSlash)
-    else
-      return CastOnTargetIfPossible(Skills.SpinningEdge)
-    end
+  if IsCapable(Skills.Fuma) then
+    return QueueMudra(Mudras.Fuma)
   end
 
   return false
-end
-
-function UseRaiju(numNearby)
-  if numNearby > 2 then return false end
-  if not PlayerHasBuff(Buffs.RaijuReady) then return false end
-
-  return CastOnTargetIfPossible(Skills.FleetingRaiju)
-    or CastOnTargetIfPossible(Skills.ForkedRaiju);
-end
-
-local function MaintainHuton()
-  -- If player doesn't have Huton, must cast.
-  local hutonTimeleft = Player.gauge[2]
-  local hasHuton = hutonTimeleft > 0
-  if not hasHuton and IsNinjutsuReady() then
-    return QueueMudra(Mudras.Huton)
-  end
-
-  if hutonTimeleft < 30000 and profile.ACEnabled then
-    local isImmediate = Player.gauge[2] <= 3000
-    if isImmediate or Player.lastcomboid == Skills.GustSlash then
-      if CastOnTargetIfPossible(Skills.ArmorCrush) then return true end
-    end
-  end
-
-  return false
-end
-
-local function ManageNinki(numNearby)
-  local ninkiPower = Player.gauge[1]
-
-  if CastOnTargetIfPossible(Skills.Bunshin) then
-    return true
-  end
-
-  -- Use Bunshin as soon as it is off cooldown.
-  if CastOnSelfIfPossible(Skills.Bunshin) then
-    return true
-  end
-
-  -- Ninki Management
-  -- The big thing is that you will never want to overcap it
-  if numNearby < 3 then
-    -- If Trick Attack is up, use all your Ninki on Bhavacakra.
-    -- If you are about to overcap Ninki and Trick Attack is not up, use Bhavacakra once.
-    if TrickAttackIsActive() or ninkiPower >= 85 then
-      if CastOnTargetIfPossible(Skills.Bhavacakra) then
-        return true
-      end
-    end
-  else
-    -- Our ninki will now be used for AoE as well.
-    -- This means using Hellfrog Medium instead of Bhavacakra
-    if CastOnTargetIfPossible(Skills.Hellfrog) then
-      return true
-    end
-  end
-
-  return false
-end
-
-local function MugIsActive()
-  local mug = GetTargetDebuff(Buffs.Mug)
-  return mug ~= nil
 end
 
 local usedFuma = false
 local usedRaiton = false
 local usedSuiton = false
-local function TCJ()
-  if not TrickAttackIsActive() and not MugIsActive() then return false end
 
-    -- We only ever want to do this if Meisui is up
-  if profile.MeisuiEnabled and IsOnCooldown(Skills.Meisui) then return false end
+local function CastMudra(name)
+  if name == 'ten' then
+    return ReadyCast(Player.id, Skills.Ten, Skills.MudraTen)
+  elseif name == 'chi' then
+    return ReadyCast(Player.id, Skills.Chi, Skills.MudraChi)
+  elseif name == 'jin' then
+    return ReadyCast(Player.id, Skills.Jin, Skills.MudraJin)
+  end
 
-  if CastOnSelfIfPossible(Skills.TenChiJin) then
-    usedFuma = false
-    usedRaiton = false
-    usedSuiton = false
-    return true
+  return false
+end
+
+local function BasicCombo(target)
+  if Player.lastcomboid == Skills.DeathBlossom then
+    return ReadyCast(Player.id, Skills.HakkeMujinsatsu)
+  elseif Player.lastcomboid == Skills.GustSlash and Player.gauge[2] > 30000 then
+    return ReadyCast(target.id, Skills.AeolianEdge)
+  elseif Player.lastcomboid == Skills.SpinningEdge then
+    return ReadyCast(target.id, Skills.GustSlash)
   end
 
   return false
@@ -314,31 +213,37 @@ end
 -- The Cast() function is where the magic happens.
 -- Action code should be called and fired here.
 function profile.Cast(target)
-  if ComboMudra() then return true end
-
   activeTrickAttack = GetTargetDebuff(Buffs.TrickAttack)
-
   local playerHasTCJ        = PlayerHasBuff(Buffs.TenChiJin)
   local playerHasMudra      = PlayerHasBuff(Buffs.Mudra)
-  local playerHasKamaitachi = PlayerHasBuff(Buffs.KamaitachiReady)
+
+  -- TimeSince Failsafe
+  if #MudraQueue > 0 and TimeSince(StartMudra) < 6000 then
+    if CastMudra(MudraQueue[1]) then
+      table.remove(MudraQueue, 1)
+      return true
+    end
+
+    return false
+  end
 
   if playerHasTCJ then
     if not usedFuma then
-      if CastOnTargetIfPossible(Skills.TCJFuma) then
+      if ReadyCast(target.id, Skills.TCJFuma) then
         usedFuma = true
         return true
       end
     end
 
     if not usedRaiton then
-      if CastOnTargetIfPossible(Skills.TCJRaiton) then
+      if ReadyCast(target.id, Skills.TCJRaiton) then
         usedRaiton = true
         return true
       end
     end
 
     if not usedSuiton then
-      if CastOnTargetIfPossible(Skills.TCJSuiton) then
+      if ReadyCast(target.id, Skills.TCJSuiton) then
         usedSuiton = true
         return true
       end
@@ -348,42 +253,59 @@ function profile.Cast(target)
   end
 
   if playerHasMudra then
-    if CastOnSelf(Skills.Ninjutsu) then return true end
-    if CastOnTarget(Skills.Ninjutsu) then return true end
-    return false
-  end
-
-  if playerHasKamaitachi then
-    if CastOnTarget(Skills.Kamaitachi) then return true end
-    if CastOnTarget(Skills.Bunshin) then return true end
+    if ReadyCast(Player.id, Skills.Ninjutsu) then return true end
+    if ReadyCast(target.id, Skills.Ninjutsu) then return true end
     return false
   end
 
   local nearby = GetNearbyEnemies(10)
 
-  if MaintainHuton() then return true end
+  -- Cast Huton if player doesn't have it.
+  if Player.gauge[2] == 0 and IsNinjutsuReady() and IsCapable(Skills.Huton) then
+    return QueueMudra(Mudras.Huton)
+  end
 
-  if profile.RaijuEnabled then
-    if UseRaiju(#nearby) then
-      return true
+  if Player.gauge[2] < 30000 and profile.ACEnabled then
+    local isImmediate = Player.gauge[2] <= 3000
+    if isImmediate or Player.lastcomboid == Skills.GustSlash then
+      if ReadyCast(target.id, Skills.ArmorCrush) then return true end
+    end
+  end
+
+  if profile.RaijuEnabled and #nearby < 2 then
+    if PlayerHasBuff(Buffs.RaijuReady) then
+      if ReadyCast(target.id, Skills.FleetingRaiju, Skills.ForkedRaiju) then
+        return true
+      end
     end
   end
 
   if profile.NinkiEnabled then
-    if ManageNinki(#nearby) then
-      return true
+    local ninkiPower = Player.gauge[1]
+
+    -- Bunshin = Kamaitachi | Cast both on cooldown
+    if ReadyCast(target.id, Skills.Bunshin) then return true end
+    if ReadyCast(Player.id, Skills.Bunshin) then return true end
+
+    -- Ninki Management, The big thing is that you will never want to overcap it
+    if #nearby > 2 then
+      if ReadyCast(target.id, Skills.Hellfrog) then return true end
+    elseif TrickAttackIsActive() or ninkiPower >= 85 then
+      if ReadyCast(target.id, Skills.Bhavacakra) then return true end
     end
   end
 
   if profile.TCJEnabled then
-    if TCJ() then
-      return true
+    if TrickAttackIsActive() or MugIsActive() then
+      if (profile.MeisuiEnabled and not IsOnCooldown(Skills.Meisui)) or not profile.MeisuiEnabled then
+        if ReadyCast(Player.id, Skills.TenChiJin) then return true end
+      end
     end
   end
 
   -- TA becomes priority when Suiton is active
   if profile.TAEnabled then
-    if CastOnTargetIfPossible(Skills.TrickAttack) then return true end
+    if ReadyCast(target.id, Skills.TrickAttack) then return true end
   end
 
   if profile.AssassinateEnabled then
@@ -394,9 +316,7 @@ function profile.Cast(target)
 
   if profile.MeisuiEnabled then
     if PlayerHasBuff(Buffs.Suiton) and IsOnCooldown(Skills.TrickAttack) then
-      if CastOnSelfIfPossible(Skills.Meisui) then
-        return true
-      end
+      if ReadyCast(Player.id, Skills.Meisui) then return true end
     end
   end
 
@@ -407,19 +327,22 @@ function profile.Cast(target)
 
     -- Priority of Kassatsu is not very high
     -- We just need to throw it into our rotation on CD
-    if not IsNinjutsuReady() and not PlayerHasBuff(Buffs.Mudra) then
-      if CastOnSelfIfPossible(Skills.Kassatsu) then return true end
+    if not IsNinjutsuReady() and not PlayerHasBuff(Buffs.Mudra) and IsCapable(Skills.Kassatsu) then
+      if ReadyCast(Player.id, Skills.Kassatsu) then return true end
     end
   end
 
   if profile.ComboEnabled then
-    if BasicCombo(#nearby) then
-      return true
+    if BasicCombo(target) then return true end
+    if profile.AOEEnabled and #nearby > 2 and IsCapable(Skills.DeathBlossom) then
+      if ReadyCast(Player.id, Skills.DeathBlossom) then return true end
+    else
+      if ReadyCast(target.id, Skills.SpinningEdge) then return true end
     end
   end
 
   if profile.ThrowingEnabled then
-    if CastOnTargetIfPossible(Skills.ThrowingDagger) then
+    if ReadyCast(target.id, Skills.ThrowingDagger) and IsCapable(Skills.ThrowingDagger) then
       return true
     end
   end
