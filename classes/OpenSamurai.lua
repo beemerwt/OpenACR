@@ -1,4 +1,4 @@
-local profile = {
+local Samurai = {
 
   AOEEnabled = true
 }
@@ -162,7 +162,7 @@ local function BasicCombo(target)
   end
 
   -- Perform start of combo
-  if profile.AOEEnabled and #nearby > 2 and (not ka and not getsu) then
+  if Samurai.AOEEnabled and #nearby > 2 and (not ka and not getsu) then
     if ReadyCast(target.id, Skills.Fuga) then return true end
   else
     if ReadyCast(target.id, Skills.Hakaze) then return true end
@@ -172,7 +172,7 @@ local function BasicCombo(target)
 end
 
 local CurrentCombo = {}
-function profile.Cast(target)
+function Samurai:Cast(target)
   if #CurrentCombo > 0 then
     local action = ActionList:Get(1, CurrentCombo[1])
     if not table.valid(action) then
@@ -193,17 +193,16 @@ function profile.Cast(target)
 
   nearby = GetNearbyEnemies(10)
   if BasicCombo(target) then return true end
-  
   return false
 end
 
-function profile.Draw()
-  profile.AOEEnabled = GUI:Checkbox("AOE Enabled", profile.AOEEnabled)
+function Samurai:Draw()
+  self.AOEEnabled = GUI:Checkbox("AOE Enabled", self.AOEEnabled)
 
 end
 
-function profile.OnLoad()
-  profile.AOEEnabled = ACR.GetSetting("OpenACR_Samurai_AOEEnabled", true)
+function Samurai:OnLoad()
+  self.AOEEnabled = ACR.GetSetting("OpenACR_Samurai_AOEEnabled", true)
 end
 
-return profile
+return Samurai

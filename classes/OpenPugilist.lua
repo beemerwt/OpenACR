@@ -1,4 +1,4 @@
-local Monk = {
+local Pugilist = {
 
 }
 
@@ -40,13 +40,46 @@ local function GetCurrentForm()
   return 0
 end
 
-function Monk:Cast(target)
+function Pugilist:Cast(target)
+  -- Pugilist
+  local playerHasDisciplinedFist = HasBuff(Player.id, Buffs.DisciplinedFist)
+  local playerHasLeadenFist = HasBuff(Player.id, Buffs.LeadenFist)
+  local targetHasDemolish = HasBuff(target.id, Buffs.Demolish)
+  local playerForm = GetCurrentForm()
+
+  if playerForm == Buffs.OpoOpoForm then
+    if not playerHasLeadenFist then
+      if ReadyCast(target.id, Skills.DragonKick) then return true end
+    end
+
+    if ReadyCast(target.id, Skills.Bootshine) then return true end
+  end
+
+  if playerForm == Buffs.CoeurlForm then
+    if not targetHasDemolish then
+      if ReadyCast(target.id, Skills.Demolish) then return true end
+    end
+
+    if ReadyCast(target.id, Skills.SnapPunch) then return true end
+  end
+
+  if playerForm == Buffs.RaptorForm then
+    if not playerHasDisciplinedFist then
+      if ReadyCast(target.id, Skills.TwinSnakes) then return true end
+    end
+
+    if ReadyCast(target.id, Skills.TrueStrike) then return true end
+  end
+
+  if playerForm == 0 then
+    if ReadyCast(target.id, Skills.Bootshine) then return true end
+  end
 end
 
-function Monk:Draw()
+function Pugilist:Draw()
 end
 
-function Monk:OnLoad()
+function Pugilist:OnLoad()
 end
 
-return Monk
+return Pugilist

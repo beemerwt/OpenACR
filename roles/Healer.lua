@@ -1,6 +1,6 @@
 local Healer = {}
 
-function Healer.Defensives()
+function Healer:Defensives()
 end
 
 return Healer
