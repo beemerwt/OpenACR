@@ -12,6 +12,7 @@ OpenACR = {
     [FFXIV.JOBS.ROGUE] = true,
     [FFXIV.JOBS.PUGILIST] = true,
     [FFXIV.JOBS.LANCER] = true,
+    [FFXIV.JOBS.MARAUDER] = true,
 
     [FFXIV.JOBS.NINJA] = true,
     [FFXIV.JOBS.MONK] = true,
@@ -28,6 +29,7 @@ OpenACR = {
     [FFXIV.JOBS.ROGUE] = "Rogue.lua",
     [FFXIV.JOBS.PUGILIST] = "Pugilist.lua",
     [FFXIV.JOBS.LANCER] = "Lancer.lua",
+    [FFXIV.JOBS.MARAUDER] = "Marauder.lua",
 
     -- Advanced classes
     [FFXIV.JOBS.NINJA] = "Ninja.lua",
@@ -86,9 +88,8 @@ function OpenACR.Cast()
   if not target.attackable then return false end
 
   -- TODO: Make HP Percent adjustable
-  if OpenACR.CurrentRole and Player.hp.percent < 35 then
-    if OpenACR.CurrentRole:Defensives() then return true end
-  end
+  if OpenACR.CurrentRole:Defensives() then return true end
+  if OpenACR.CurrentRole:Control() then return true end
 
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Cast then
     if OpenACR.CurrentProfile:Cast(target) then return true end
@@ -158,7 +159,7 @@ function OpenACR.ReloadRole()
   local role, roleError = loadfile(OpenACR.MainPath .. [[\roles\]] .. rolefile, "t")
   if role then
     OpenACR.CurrentRole = role()
-    if OpenACR.CurrentRole and OpenACR.CurrentRole.OnLoad then
+    if OpenACR.CurrentRole then
       OpenACR.CurrentRole:OnLoad()
     end
   else
