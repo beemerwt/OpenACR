@@ -11,10 +11,14 @@ OpenACR = {
   classes = {
     [FFXIV.JOBS.ROGUE] = true,
     [FFXIV.JOBS.PUGILIST] = true,
+    [FFXIV.JOBS.LANCER] = true,
+
     [FFXIV.JOBS.NINJA] = true,
+    [FFXIV.JOBS.MONK] = true,
+    [FFXIV.JOBS.DRAGOON] = true,
+
     [FFXIV.JOBS.SAMURAI] = true,
     [FFXIV.JOBS.REAPER] = true,
-    [FFXIV.JOBS.MONK] = true,
     [FFXIV.JOBS.DANCER] = true,
   },
 
@@ -23,10 +27,12 @@ OpenACR = {
     -- Base classes
     [FFXIV.JOBS.ROGUE] = "OpenRogue.lua",
     [FFXIV.JOBS.PUGILIST] = "OpenPugilist.lua",
+    [FFXIV.JOBS.LANCER] = "OpenLancer.lua",
 
     -- Advanced classes
     [FFXIV.JOBS.NINJA] = "OpenNinja.lua",
     [FFXIV.JOBS.MONK] = "OpenMonk.lua",
+    [FFXIV.JOBS.DRAGOON] = "OpenDragoon.lua",
 
     -- Special classes
     [FFXIV.JOBS.SAMURAI] = "OpenSamurai.lua",
