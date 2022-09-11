@@ -87,9 +87,7 @@ function OpenACR.Cast()
   if target == nil then return false end
   if not target.attackable then return false end
 
-  -- TODO: Make HP Percent adjustable
-  if OpenACR.CurrentRole:Defensives() then return true end
-  if OpenACR.CurrentRole:Control() then return true end
+  if OpenACR.CurrentRole:Cast(target) then return true end
 
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Cast then
     if OpenACR.CurrentProfile:Cast(target) then return true end

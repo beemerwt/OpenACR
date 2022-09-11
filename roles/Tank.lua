@@ -19,8 +19,6 @@ local Skills = {
 }
 
 function Tank:Defensives()
-  if not self.DefensivesEnabled then return false end
-
   if Player.hp.percent < 35 then
     if ReadyCast(Player.id, Skills.Rampart) then return true end
   end
@@ -32,8 +30,51 @@ function Tank:Defensives()
   return false
 end
 
+function Tank:Control(target)
+  return false
+end
+
+function IsFirstEnemyNearbyTargetingMe()
+  local el = EntityList("aggro,incombat,attackable,maxdistance=25")
+  if not table.valid(el) then return end
+  for _,entity in pairs(el) do
+    if entity.targetid ~= Player.id then
+      return entity
+    end
+  end
+end
+
+-- Provokes the first target that isn't focused on the Tank
 function Tank:Provoke()
-  
+  local el = EntityList("aggro,incombat,attackable,maxdistance=25")
+  if table.valid(el) then
+    for id,entity in pairs(el) do
+      if entity.targetid ~= Player.id then
+        if ReadyCast(id, Skills.Provoke) then
+          return true
+        end
+      end
+    end
+  end
+
+  return false
+end
+
+function Tank:Cast(target)
+  -- TODO: Make HP Percent adjustable
+  if self.DefensivesEnabled then
+    if self:Defensives() then
+      return true
+    end
+  end
+
+  if self.ControlEnabled then
+    if self:Control(target) then
+      return true
+    end
+  end
+
+  return false
 end
 
 function Tank:Draw()

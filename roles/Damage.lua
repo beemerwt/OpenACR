@@ -11,8 +11,6 @@ local Skills = {
 }
 
 function Damage:Defensives()
-  if not self.DefensivesEnabled then return false end
-
   if Player.hp.percent < 35 then
     if ReadyCast(Player.id, Skills.SecondWind) then return true end
   end
@@ -24,8 +22,7 @@ function Damage:Defensives()
   return false
 end
 
-function Damage:Control()
-  if not self.ControlEnabled then return false end
+function Damage:Control(target)
   return false
 end
 
@@ -37,6 +34,23 @@ function Damage:TrueNorth()
   local action = ActionList:Get(1, Skills.TrueNorth)
   if action.cd >= 50 and action:IsReady() then
     if action:Cast() then
+      return true
+    end
+  end
+
+  return false
+end
+
+function Damage:Cast(target)
+  -- TODO: Make HP Percent adjustable
+  if self.DefensivesEnabled then
+    if self:Defensives() then
+      return true
+    end
+  end
+
+  if self.ControlEnabled then
+    if self:Control(target) then
       return true
     end
   end

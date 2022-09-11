@@ -4,12 +4,27 @@ local Healer = {
 }
 
 function Healer:Defensives()
-  if not self.DefensivesEnabled then return false end
   return false
 end
 
-function Healer:Control()
-  if not self.ControlEnabled then return false end
+function Healer:Control(target)
+  return false
+end
+
+function Healer:Cast(target)
+  -- TODO: Make HP Percent adjustable
+  if self.DefensivesEnabled then
+    if self:Defensives() then
+      return true
+    end
+  end
+
+  if self.ControlEnabled then
+    if self:Control(target) then
+      return true
+    end
+  end
+
   return false
 end
 
