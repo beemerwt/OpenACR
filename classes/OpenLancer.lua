@@ -1,4 +1,4 @@
-local Dragoon = {
+local Lancer = {
 }
 
 local Skills = {
@@ -15,18 +15,19 @@ local Skills = {
   ChaosThrust = -1,
 }
 
-function Dragoon:Cast(target)
-end
-
-function Dragoon:Draw()
+function Lancer:Cast(target)
 
 end
 
-function Dragoon:OnUpdate()
-end
-
-function Dragoon:OnLoad()
+function Lancer:Draw()
 
 end
 
-return Dragoon
+function Lancer:OnUpdate()
+end
+
+function Lancer:OnLoad()
+
+end
+
+return Lancer
