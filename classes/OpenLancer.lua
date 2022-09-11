@@ -3,6 +3,7 @@ local Lancer = {
 
 local Buffs = {
   PowerSurge = 2720, -- Damage increase
+  LifeSurge = 116
 }
 
 local Skills = {
@@ -19,24 +20,39 @@ local Skills = {
 
 function Lancer:Cast(target)
   local playerHasPowerSurge = HasBuff(Player.id, Buffs.PowerSurge, 0, 3)
+  local playerHasLifeSurge = HasBuff(Player.id, Buffs.LifeSurge)
 
   -- Just cast on cooldown
   if ReadyCast(Player.id, Skills.LanceCharge) then return true end
 
   if Player.lastcomboid == Skills.VorpalThrust then
+    -- Cast life surge before Full Thrust for max damage
+    if not playerHasLifeSurge then
+      if ReadyCast(Player.id, Skills.LifeSurge) then return true end
+    end
+
     if ReadyCast(target.id, Skills.FullThrust) then return true end
-  elseif Player.lastcomboid == Skills.TrueThrust then
+  end
+
+  if Player.lastcomboid == Skills.TrueThrust then
     if not playerHasPowerSurge then
       if ReadyCast(target.id, Skills.Disembowel) then return true end
     end
+
     if ReadyCast(target.id, Skills.VorpalThrust) then return true end
-  elseif Player.lastcomboid == Skills.Disembowel then
-    if ReadyCast(target.id, Skills.ChaosThrust) then return true end
-  else
-    if ReadyCast(target.id, Skills.TrueThrust) then return true end
-    if ReadyCast(target.id, Skills.PiercingTalon) then return true end -- will default cast if too far away for melee
   end
 
+  if Player.lastcomboid == Skills.Disembowel then
+    -- Cast life surge before Chaos Thrust for max damage
+    if not playerHasLifeSurge then
+      if ReadyCast(Player.id, Skills.LifeSurge) then return true end
+    end
+
+    if ReadyCast(target.id, Skills.ChaosThrust) then return true end
+  end
+
+  if ReadyCast(target.id, Skills.TrueThrust) then return true end
+  if ReadyCast(target.id, Skills.PiercingTalon) then return true end -- will default cast if too far away for melee
   return false
 end
 
