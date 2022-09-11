@@ -1,6 +1,6 @@
 local Damage = {
-  BloodbathEnabled = true,
-  SecondWindEnabled = true,
+  DefensivesEnabled = true,
+  ControlEnabled = false,
   TrueNorthEnabled = true
 }
 
@@ -11,23 +11,22 @@ local Skills = {
 }
 
 function Damage:Defensives()
-  if self.SecondWindEnabled then
-    if ReadyCast(Player.id, Skills.SecondWind) then
-      return true
-    end
+  if not self.DefensivesEnabled then return false end
+
+  if Player.hp.percent < 35 then
+    if ReadyCast(Player.id, Skills.SecondWind) then return true end
   end
 
-  if self.BloodbathEnabled then
-    if ReadyCast(Player.id, Skills.Bloodbath) then
-      return true
-    end
+  if Player.hp.percent < 50 then
+    if ReadyCast(Player.id, Skills.Bloodbath) then return true end
   end
 
   return false
 end
 
 function Damage:Control()
-
+  if not self.ControlEnabled then return false end
+  return false
 end
 
 -- This is more for utility purposes.
@@ -46,14 +45,14 @@ function Damage:TrueNorth()
 end
 
 function Damage:Draw()
-  self.BloodbathEnabled = GUI:Checkbox("Bloodbath", self.BloodbathEnabled)
-  self.SecondWindEnabled = GUI:Checkbox("Second Wind", self.SecondWindEnabled)
+  self.DefensivesEnabled = GUI:Checkbox("Defensives Enabled", self.DefensivesEnabled)
+  self.ControlEnabled = GUI:Checkbox("Control Enabled", self.ControlEnabled)
   self.TrueNorthEnabled = GUI:Checkbox("True North", self.TrueNorthEnabled)
 end
 
 function Damage:OnLoad()
-  self.BloodbathEnabled = ACR.GetSetting("OpenACR_Damage_BloodbathEnabled", true)
-  self.SecondWindEnabled = ACR.GetSetting("OpenACR_Damage_SecondWindEnabled", true)
+  self.DefensivesEnabled = ACR.GetSetting("OpenACR_Damage_Defensives", true)
+  self.ControlEnabled = ACR.GetSetting("OpenACR_Damage_Control", false)
   self.TrueNorthEnabled = ACR.GetSetting("OpenACR_Damage_TrueNorthEnabled", true)
 end
 
