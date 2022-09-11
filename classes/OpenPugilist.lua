@@ -76,10 +76,4 @@ function Pugilist:Cast(target)
   end
 end
 
-function Pugilist:Draw()
-end
-
-function Pugilist:OnLoad()
-end
-
 return Pugilist

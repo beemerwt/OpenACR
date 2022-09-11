@@ -58,12 +58,4 @@ function Lancer:Cast(target)
   return false
 end
 
-function Lancer:Draw()
-
-end
-
-function Lancer:OnLoad()
-
-end
-
 return Lancer
