@@ -50,9 +50,10 @@ function Marauder:Cast(target)
   if Player.lastcomboid == Skills.Maim then
     if not playerHasSurgingTempest then
       if ReadyCast(target.id, Skills.StormsEye) then return true end
-    else
-      if ReadyCast(target.id, Skills.StormsPath) then return true end
     end
+
+    if ReadyCast(Player.id, Skills.Berserk) then return true end
+    if ReadyCast(target.id, Skills.StormsPath) then return true end
   end
 
   if Player.lastcomboid == Skills.HeavySwing then
