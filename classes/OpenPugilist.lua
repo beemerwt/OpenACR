@@ -1,4 +1,4 @@
-local Monk = {
+local Pugilist = {
 
 }
 
@@ -40,7 +40,7 @@ local function GetCurrentForm()
   return 0
 end
 
-function Monk.Cast(target)
+function Pugilist.Cast(target)
   -- Pugilist
   local playerHasDisciplinedFist = HasBuff(Player.id, Buffs.DisciplinedFist)
   local playerHasLeadenFist = HasBuff(Player.id, Buffs.LeadenFist)
@@ -76,10 +76,10 @@ function Monk.Cast(target)
   end
 end
 
-function Monk.Draw()
+function Pugilist.Draw()
 end
 
-function Monk.OnLoad()
+function Pugilist.OnLoad()
 end
 
-return Monk
+return Pugilist
