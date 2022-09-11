@@ -65,39 +65,9 @@ function ClearCache()
   CachedTarget = nil
 end
 
-function GetTargetDebuff(buff)
-  for i,_ in ipairs(CachedTarget.buffs) do
-    if CachedTarget.buffs[i].id == buff then
-      return CachedTarget.buffs[i]
-    end
-  end
-
-  return nil
-end
-
-function GetPlayerBuff(buff)
-  for i,_ in ipairs(Player.buffs) do
-    if Player.buffs[i].id == buff then
-      return Player.buffs[i]
-    end
-  end
-
-  return nil
-end
-
-function TargetHasDebuff(debuff)
-  debuff = GetTargetDebuff(debuff)
-  return debuff ~= nil
-end
-
-function PlayerHasBuff(buff)
-  buff = GetPlayerBuff(buff)
-  return buff ~= nil
-end
-
 function LookupSkill(name)
   for actionId, action in pairs(ActionList:Get(1)) do
-    if string.contains(string.lower(action.name), string.lower(name)) and action.level ~= 0 then
+    if string.contains(string.lower(action.name), string.lower(name)) then
       d(action.name .. ': ' .. tostring(actionId))
     end
   end

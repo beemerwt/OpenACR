@@ -12,7 +12,8 @@ local Ninja = {
   ACEnabled          = true
 }
 
-local activeTrickAttack = nil
+local TargetHasTrickAttack = false
+local TargetHasMug = false
 
 local Buffs = {
   Mudra       = 496,
@@ -110,17 +111,8 @@ local Mudras = {
   Suiton = { 'ten', 'chi', 'jin' },
 }
 
-local function TrickAttackIsActive()
-  return activeTrickAttack ~= nil
-end
-
-local function MugIsActive()
-  local mug = GetTargetDebuff(Buffs.Mug)
-  return mug ~= nil
-end
-
 local function IsNinjutsuReady()
-  return PlayerHasBuff(Buffs.Kassatsu) or not IsOnCooldown(Skills.Ten)
+  return HasBuff(Player.id, Buffs.Kassatsu) or not IsOnCooldown(Skills.Ten)
 end
 
 local StartMudra = 0
@@ -136,11 +128,11 @@ local function Ninjutsu(numNearby)
   if not IsNinjutsuReady() then return false end
 
   if numNearby > 2 and Ninja.AOEEnabled then
-    if not PlayerHasBuff(Buffs.Doton) and IsCapable(Skills.Doton) then
+    if not HasBuff(Player.id, Buffs.Doton) and IsCapable(Skills.Doton) then
       return QueueMudra(Mudras.Doton)
     end
 
-    if PlayerHasBuff(Buffs.Kassatsu) and IsCapable(Skills.Goka) then
+    if HasBuff(Player.id, Buffs.Kassatsu) and IsCapable(Skills.Goka) then
       return QueueMudra(Mudras.Goka);
     end
 
@@ -149,8 +141,9 @@ local function Ninjutsu(numNearby)
     end
   end
 
+  local isMudraTransitioning = HasBuff(Player.id, Buffs.Mudra, 57)
   -- Use Suiton to set up Trick Attack when there is less than 20 seconds left on Trick Attack's cooldown.
-  if not PlayerHasBuff(Buffs.Suiton) and IsCapable(Skills.Suiton) then
+  if not HasBuff(Player.id, Buffs.Suiton) and not isMudraTransitioning and IsCapable(Skills.Suiton) then
     local TrickAttack = ActionList:Get(1, Skills.TrickAttack)
     if TrickAttack.cdmax - TrickAttack.cd < 20 then
       return QueueMudra(Mudras.Suiton)
@@ -158,16 +151,16 @@ local function Ninjutsu(numNearby)
   end
 
   if numNearby > 1 and Ninja.AOEEnabled then
-    if not PlayerHasBuff(Buffs.Doton) and IsCapable(Skills.Doton) then
+    if not HasBuff(Player.id, Buffs.Doton) and IsCapable(Skills.Doton) then
       return QueueMudra(Mudras.Doton)
     end
 
-    if PlayerHasBuff(Buffs.Kassatsu) and IsCapable(Skills.Goka) then
+    if HasBuff(Player.id, Buffs.Kassatsu) and IsCapable(Skills.Goka) then
       return QueueMudra(Mudras.Goka) -- Goka Mekkyaku for multi-target
     end
   end
 
-  if PlayerHasBuff(Buffs.Kassatsu) and IsCapable(Skills.Hyosho) then
+  if HasBuff(Player.id, Buffs.Kassatsu) and IsCapable(Skills.Hyosho) then
     return QueueMudra(Mudras.Hyosho) -- Hyosho Ranryu for single-target
   end
 
@@ -188,11 +181,26 @@ local usedSuiton = false
 
 local function CastMudra(name)
   if name == 'ten' then
-    return ReadyCast(Player.id, Skills.Ten, Skills.MudraTen)
+    local ten = ActionList:Get(1, Skills.Ten)
+    local mudraTen = ActionList:Get(1, Skills.MudraTen)
+    if ten:IsReady() or mudraTen:IsReady() then
+      return ten:Cast()
+    end
+    -- return ReadyCast(Player.id, Skills.Ten, Skills.MudraTen)
   elseif name == 'chi' then
-    return ReadyCast(Player.id, Skills.Chi, Skills.MudraChi)
+    local chi = ActionList:Get(1, Skills.Chi)
+    local mudraChi = ActionList:Get(1, Skills.MudraChi)
+    if chi:IsReady() or mudraChi:IsReady() then
+      return chi:Cast()
+    end
+    -- return ReadyCast(Player.id, Skills.Chi, Skills.MudraChi)
   elseif name == 'jin' then
-    return ReadyCast(Player.id, Skills.Jin, Skills.MudraJin)
+    local jin = ActionList:Get(1, Skills.Jin)
+    local mudraJin = ActionList:Get(1, Skills.MudraJin)
+    if jin:IsReady() or mudraJin:IsReady() then
+      return jin:Cast()
+    end
+    --return ReadyCast(Player.id, Skills.Jin, Skills.MudraJin)
   end
 
   return false
@@ -210,12 +218,24 @@ local function BasicCombo(target)
   return false
 end
 
+local function GetMudra()
+  for i,_ in ipairs(Player.buffs) do
+    if Player.buffs[i].id == Buffs.Mudra then
+      return Player.buffs[i]
+    end
+  end
+
+  return nil
+end
+
 -- The Cast() function is where the magic happens.
 -- Action code should be called and fired here.
 function Ninja:Cast(target)
-  activeTrickAttack = GetTargetDebuff(Buffs.TrickAttack)
-  local playerHasTCJ        = PlayerHasBuff(Buffs.TenChiJin)
-  local playerHasMudra      = PlayerHasBuff(Buffs.Mudra)
+  TargetHasTrickAttack  = HasBuff(target.id, Buffs.TrickAttack)
+  TargetHasMug          = HasBuff(target.id, Buffs.Mug)
+
+  local playerHasTCJ    = HasBuff(Player.id, Buffs.TenChiJin)
+  local playerMudra     = GetMudra()
 
   -- TimeSince Failsafe
   if #MudraQueue > 0 and TimeSince(StartMudra) < 6000 then
@@ -252,9 +272,27 @@ function Ninja:Cast(target)
     return false
   end
 
-  if playerHasMudra then
-    if ReadyCast(Player.id, Skills.Ninjutsu) then return true end
-    if ReadyCast(target.id, Skills.Ninjutsu) then return true end
+  if playerMudra ~= nil then
+    if playerMudra.stacks == 57 then
+      if ReadyCast(target.id, Skills.Suiton) then return true end
+    elseif playerMudra.stacks == 45 then
+      if ReadyCast(Player.id, Skills.Doton) then return true end
+    elseif playerMudra.stacks == 27 then
+      if ReadyCast(Player.id, Skills.Huton) then return true end
+    elseif playerMudra.stacks == 13 then
+      if ReadyCast(Player.id, Skills.Hyosho) then return true end
+    elseif playerMudra.stacks == 9 then
+      if ReadyCast(target.id, Skills.Raiton) then return true end
+    elseif playerMudra.stacks == 6 then
+      if HasBuff(Player.id, Buffs.Kassatsu) then
+        if ReadyCast(target.id, Skills.Goka) then return true end
+      else
+        if ReadyCast(target.id, Skills.Katon) then return true end
+      end
+    end
+
+    -- if ReadyCast(Player.id, Skills.Ninjutsu) then return true end
+    -- if ReadyCast(target.id, Skills.Ninjutsu) then return true end
     return false
   end
 
@@ -265,15 +303,15 @@ function Ninja:Cast(target)
     return QueueMudra(Mudras.Huton)
   end
 
-  if Player.gauge[2] < 30000 and self.ACEnabled then
-    local isImmediate = Player.gauge[2] <= 3000
+  if self.ACEnabled and Player.gauge[2] < 30000 then
+    local isImmediate = Player.gauge[2] <= 3000 and Player.gauge[2] > 0
     if isImmediate or Player.lastcomboid == Skills.GustSlash then
       if ReadyCast(target.id, Skills.ArmorCrush) then return true end
     end
   end
 
   if self.RaijuEnabled and #nearby < 2 then
-    if PlayerHasBuff(Buffs.RaijuReady) then
+    if HasBuff(Player.id, Buffs.RaijuReady) then
       if ReadyCast(target.id, Skills.FleetingRaiju, Skills.ForkedRaiju) then
         return true
       end
@@ -284,40 +322,37 @@ function Ninja:Cast(target)
     local ninkiPower = Player.gauge[1]
 
     -- Bunshin = Kamaitachi | Cast both on cooldown
-    if ReadyCast(target.id, Skills.Bunshin) then return true end
+    if ReadyCast(target.id, Skills.Kamaitachi, Skills.Bunshin) then return true end
     if ReadyCast(Player.id, Skills.Bunshin) then return true end
 
     -- Ninki Management, The big thing is that you will never want to overcap it
     if #nearby > 2 then
       if ReadyCast(target.id, Skills.Hellfrog) then return true end
-    elseif TrickAttackIsActive() or ninkiPower >= 85 then
+    elseif TargetHasTrickAttack or ninkiPower >= 85 then
       if ReadyCast(target.id, Skills.Bhavacakra) then return true end
     end
   end
 
   if self.TCJEnabled then
-    if TrickAttackIsActive() or MugIsActive() then
+    if TargetHasTrickAttack or TargetHasMug then
       if (self.MeisuiEnabled and not IsOnCooldown(Skills.Meisui)) or not self.MeisuiEnabled then
         if ReadyCast(Player.id, Skills.TenChiJin) then return true end
       end
     end
   end
 
-  -- TA becomes priority when Suiton is active
   if self.TAEnabled then
     if ReadyCast(target.id, Skills.TrickAttack) then return true end
   end
 
   if self.AssassinateEnabled then
-    if TrickAttackIsActive() and #nearby < 3 then
+    if (TargetHasTrickAttack or TargetHasMug) and #nearby < 3 then
       if ReadyCast(target.id, Skills.Assassinate, Skills.DreamWithinADream) then return true end
     end
   end
 
-  if self.MeisuiEnabled then
-    if PlayerHasBuff(Buffs.Suiton) and IsOnCooldown(Skills.TrickAttack) then
-      if ReadyCast(Player.id, Skills.Meisui) then return true end
-    end
+  if self.MeisuiEnabled and IsOnCooldown(Skills.TrickAttack) then
+    if ReadyCast(Player.id, Skills.Meisui) then return true end
   end
 
   if self.NinjutsuEnabled then
@@ -327,7 +362,7 @@ function Ninja:Cast(target)
 
     -- Priority of Kassatsu is not very high
     -- We just need to throw it into our rotation on CD
-    if not IsNinjutsuReady() and not PlayerHasBuff(Buffs.Mudra) and IsCapable(Skills.Kassatsu) then
+    if not IsNinjutsuReady() and not HasBuff(Player.id, Buffs.Mudra) then
       if ReadyCast(Player.id, Skills.Kassatsu) then return true end
     end
   end
@@ -342,9 +377,7 @@ function Ninja:Cast(target)
   end
 
   if self.ThrowingEnabled then
-    if ReadyCast(target.id, Skills.ThrowingDagger) and IsCapable(Skills.ThrowingDagger) then
-      return true
-    end
+    if ReadyCast(target.id, Skills.ThrowingDagger) then return true end
   end
 
   return false

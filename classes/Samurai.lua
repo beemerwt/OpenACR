@@ -101,9 +101,9 @@ local function BasicCombo(target)
   end
 
   -- Maintain buffs and debuffs
-  local playerHasFuka = PlayerHasBuff(Buffs.Fuka)
-  local playerHasFugetsu = PlayerHasBuff(Buffs.Fugetsu)
-  local targetHiganbana = GetTargetDebuff(Buffs.Higanbana)
+  local playerHasFuka = HasBuff(Player.id, Buffs.Fuka)
+  local playerHasFugetsu = HasBuff(Player.id, Buffs.Fugetsu)
+  local targetHiganbana = HasBuff(target.id, Buffs.Higanbana)
 
   if not targetHiganbana and Player.lastcomboid == Skills.Hakaze then
     if ReadyCast(target.id, Skills.Higanbana) then return true end

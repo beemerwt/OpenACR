@@ -66,15 +66,15 @@ function Reaper:Cast(target)
   if TimeSince(lasttime) < 100 then return false end
   lasttime = Now()
 
-  local playerHasReaverStack = PlayerHasBuff(Buffs.SoulReaver)
-  local playerHasSacrificeStacks = PlayerHasBuff(Buffs.ImmortalSacrifice)
+  local playerHasReaverStack = HasBuff(Player.id, Buffs.SoulReaver)
+  local playerHasSacrificeStacks = HasBuff(Player.id, Buffs.ImmortalSacrifice)
 
-  local playerHasGibbet = PlayerHasBuff(Buffs.EnhancedGibbet)
-  local playerHasGallows = PlayerHasBuff(Buffs.EnhancedGallows)
-  local playerHasSoulSow = PlayerHasBuff(Buffs.SoulSow)
-  local playerHasShroud = PlayerHasBuff(Buffs.Enshroud)
+  local playerHasGibbet = HasBuff(Player.id, Buffs.EnhancedGibbet)
+  local playerHasGallows = HasBuff(Player.id, Buffs.EnhancedGallows)
+  local playerHasSoulSow = HasBuff(Player.id, Buffs.SoulSow)
+  local playerHasShroud = HasBuff(Player.id, Buffs.Enshroud)
 
-  local targetDeathsDesign = GetTargetDebuff(Buffs.DeathsDesign)
+  local targetDeathsDesign = HasBuff(target.id, Buffs.DeathsDesign)
 
   local nearby = GetNearbyEnemies(10)
 

@@ -77,13 +77,7 @@ function OpenACR.DrawFooter()
 end
 
 function OpenACR.Cast()
-  if Player == nil then return false end
-  if not ActionList:IsReady() then return false end
-
-  -- ensures we're getting newest state of any actions
-  ClearCache()
-
-  local target = GetACRTarget()
+  local target = MGetTarget()
   if target == nil then return false end
   if not target.attackable then return false end
 
