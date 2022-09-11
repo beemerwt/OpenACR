@@ -11,19 +11,19 @@ local Buffs = {
 
 local Skills = {
   Bootshine = 53, -- Changes form to Raptor
-  ArmOfTheDestroyer = -1, -- Changes form to Raptor, if used from opo-opo does more damage (useless)
-  DragonKick = -1, -- Changes form to Raptor, if used from opo-opo grants Leaden Fist ()
+  ArmOfTheDestroyer = 62, -- Changes form to Raptor, if used from opo-opo does more damage (useless)
+  DragonKick = 74, -- Changes form to Raptor, if used from opo-opo grants Leaden Fist ()
 
   TrueStrike = 54, -- Can only be executed in Raptor form, Changes form to Coeurl
-  TwinSnakes = -1, -- Can only be executed in Raptor form, Changes form to Coeurl, Grants Disciplined Fist (Damage Increase)
+  TwinSnakes = 61, -- Can only be executed in Raptor form, Changes form to Coeurl, Grants Disciplined Fist (Damage Increase)
 
   SnapPunch = 56, -- Can only be executed in Coeurl form, Changes form to opo-opo
-  Demolish = -1, -- Can only be executed in Coeurl form, Changes form to opo-opo, Grants Damage Over Time
+  Demolish = 66, -- Can only be executed in Coeurl form, Changes form to opo-opo, Grants Damage Over Time
 
-  Meditation = -1, -- Changes to SteelPeak, so maybe use this if SteelPeak doesn't work?
+  Meditation = 3546, -- UNKNOWN Changes to SteelPeak, so maybe use this if SteelPeak doesn't work?
   SteelPeak = -1, -- Can only be used while Fifth Chakra, will use all of the Chakra
 
-  Mantra = -1, -- Increases HP Recovery by 10% for everyone
+  Mantra = 65, -- Increases HP Recovery by 10% for everyone
 }
 
 local function GetCurrentForm()
