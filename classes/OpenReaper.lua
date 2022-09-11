@@ -1,4 +1,4 @@
-local profile = {
+local Reaper = {
 
 }
 
@@ -62,7 +62,7 @@ end
 local ShroudStack = {}
 
 local lasttime = 0
-function profile.Cast(target)
+function Reaper:Cast(target)
   if TimeSince(lasttime) < 100 then return false end
   lasttime = Now()
 
@@ -91,7 +91,7 @@ function profile.Cast(target)
   end
 
   if playerHasReaverStack then
-    if profile.AOEEnabled and #nearby > 1 then
+    if self.AOEEnabled and #nearby > 1 then
       if ReadyCast(target.id, Skills.Guillotine) then return true end
     else
       if playerHasGibbet then
@@ -113,7 +113,7 @@ function profile.Cast(target)
 
   -- Maintain the Death's Design debuff at all times by using Shadow of Death.
   if not targetDeathsDesign or targetDeathsDesign.duration < 15 then
-    if #nearby > 1 and profile.AOEEnabled then
+    if #nearby > 1 and self.AOEEnabled then
       if ReadyCast(Player.id, Skills.WhorlOfDeath) then return true end
     else
       if ReadyCast(target.id, Skills.ShadowOfDeath) then return true end
@@ -130,7 +130,7 @@ function profile.Cast(target)
 
   -- Use Soul Slice if you have 50 or less Soul.
   if soul <= 50 then
-    if #nearby > 1 and profile.AOEEnabled then
+    if #nearby > 1 and self.AOEEnabled then
       if ReadyCast(Player.id, Skills.SoulScythe) then return true end
     else
       if ReadyCast(target.id, Skills.SoulSlice) then return true end
@@ -151,7 +151,7 @@ function profile.Cast(target)
     if ReadyCast(Player.id, Skills.Enshroud) then
       EnshroudStart = Now()
 
-      if profile.AOEEnabled and #nearby > 1 then
+      if self.AOEEnabled and #nearby > 1 then
         ShroudStack = {
           Skills.GrimReaping,
           Skills.GrimReaping,
@@ -186,7 +186,7 @@ function profile.Cast(target)
 
   -- Use an Unveiled action variant if you have 50 or more Soul and 90 or less Shroud.
   if soul >= 50 and shroud <= 90 then
-    if #nearby > 1 and profile.AOEEnabled then
+    if #nearby > 1 and self.AOEEnabled then
       if ReadyCast(target.id, Skills.GrimSwathe) then return true end
     else
       if ReadyCast(target.id, Skills.UnveiledGallows) then return true end
@@ -196,7 +196,7 @@ function profile.Cast(target)
 
   -- Use your combo actions (Slice, Waxing Slice or Infernal Slice) as fillers.
   if BasicCombo(target) then return true end
-  if #nearby > 1 and profile.AOEEnabled then
+  if #nearby > 1 and self.AOEEnabled then
     if ReadyCast(Player.id, Skills.SpinningScythe) then return true end
   else
     if ReadyCast(target.id, Skills.Slice) then return true end
@@ -217,12 +217,12 @@ function profile.Cast(target)
   end
 end
 
-function profile.Draw()
-  profile.AOEEnabled = GUI:Checkbox("AOE Enabled", profile.AOEEnabled)
+function Reaper:Draw()
+  self.AOEEnabled = GUI:Checkbox("AOE Enabled", self.AOEEnabled)
 end
 
-function profile.OnLoad()
-  profile.AOEEnabled = ACR.GetSetting("OpenACR_Reaper_AOEEnabled", true)
+function Reaper:OnLoad()
+  self.AOEEnabled = ACR.GetSetting("OpenACR_Reaper_AOEEnabled", true)
 end
 
-return profile
+return Reaper

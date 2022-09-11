@@ -10,15 +10,15 @@ local Skills = {
   TrueNorth = 7546,
 }
 
-function Damage.Defensives()
-  if Damage.SecondWindEnabled then
-    if CastOnSelfIfPossible(Skills.SecondWind) then
+function Damage:Defensives()
+  if self.SecondWindEnabled then
+    if ReadyCast(Player.id, Skills.SecondWind) then
       return true
     end
   end
 
-  if Damage.BloodbathEnabled then
-    if CastOnSelfIfPossible(Skills.Bloodbath) then
+  if self.BloodbathEnabled then
+    if ReadyCast(Player.id, Skills.Bloodbath) then
       return true
     end
   end
@@ -26,14 +26,14 @@ function Damage.Defensives()
   return false
 end
 
-function Damage.Control()
+function Damage:Control()
 
 end
 
 -- This is more for utility purposes.
 -- Call this function specifically in cases where it's needed.
-function Damage.TrueNorth()
-  if not Damage.TrueNorthEnabled then return false end
+function Damage:TrueNorth()
+  if not self.TrueNorthEnabled then return false end
 
   local action = ActionList:Get(1, Skills.TrueNorth)
   if action.cd >= 50 and action:IsReady() then
@@ -45,16 +45,16 @@ function Damage.TrueNorth()
   return false
 end
 
-function Damage.Draw()
-  Damage.BloodbathEnabled = GUI:Checkbox("Bloodbath", Damage.BloodbathEnabled)
-  Damage.SecondWindEnabled = GUI:Checkbox("Second Wind", Damage.SecondWindEnabled)
-  Damage.TrueNorthEnabled = GUI:Checkbox("True North", Damage.TrueNorthEnabled)
+function Damage:Draw()
+  self.BloodbathEnabled = GUI:Checkbox("Bloodbath", self.BloodbathEnabled)
+  self.SecondWindEnabled = GUI:Checkbox("Second Wind", self.SecondWindEnabled)
+  self.TrueNorthEnabled = GUI:Checkbox("True North", self.TrueNorthEnabled)
 end
 
-function Damage.OnLoad()
-  Damage.BloodbathEnabled = ACR.GetSetting("OpenACR_Damage_BloodbathEnabled", true)
-  Damage.SecondWindEnabled = ACR.GetSetting("OpenACR_Damage_SecondWindEnabled", true)
-  Damage.TrueNorthEnabled = ACR.GetSetting("OpenACR_Damage_TrueNorthEnabled", true)
+function Damage:OnLoad()
+  self.BloodbathEnabled = ACR.GetSetting("OpenACR_Damage_BloodbathEnabled", true)
+  self.SecondWindEnabled = ACR.GetSetting("OpenACR_Damage_SecondWindEnabled", true)
+  self.TrueNorthEnabled = ACR.GetSetting("OpenACR_Damage_TrueNorthEnabled", true)
 end
 
 return Damage

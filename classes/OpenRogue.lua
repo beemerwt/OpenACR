@@ -2,15 +2,15 @@ local Rogue = {
 
 }
 
-function Rogue.Cast()
+function Rogue:Cast(target)
 
 end
 
-function Rogue.Draw()
+function Rogue:Draw()
 
 end
 
-function Rogue.OnLoad()
+function Rogue:OnLoad()
 
 end
 

@@ -40,7 +40,7 @@ local function GetCurrentForm()
   return 0
 end
 
-function Pugilist.Cast(target)
+function Pugilist:Cast(target)
   -- Pugilist
   local playerHasDisciplinedFist = HasBuff(Player.id, Buffs.DisciplinedFist)
   local playerHasLeadenFist = HasBuff(Player.id, Buffs.LeadenFist)
@@ -76,10 +76,10 @@ function Pugilist.Cast(target)
   end
 end
 
-function Pugilist.Draw()
+function Pugilist:Draw()
 end
 
-function Pugilist.OnLoad()
+function Pugilist:OnLoad()
 end
 
 return Pugilist

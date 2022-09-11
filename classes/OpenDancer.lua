@@ -1,4 +1,4 @@
-local profile = {
+local Dancer = {
   AutoPartner = true,
   AutoPeloton = true,
 }
@@ -47,15 +47,15 @@ local function GetBestDancePartner()
   return member
 end
 
-function profile.Cast(target)
+function Dancer:Cast(target)
   local playerHasPartner = HasBuff(Player.id, Buffs.ClosedPosition)
   local playerHasPeloton = HasBuff(Player.id, Buffs.Peloton)
 
-  if profile.AutoPeloton and Player:IsMoving() and not playerHasPeloton then
+  if self.AutoPeloton and Player:IsMoving() and not playerHasPeloton then
     if ReadyCast(Player.id, Skills.Peloton) then return true end
   end
 
-  if profile.AutoPartner and not playerHasPartner then
+  if self.AutoPartner and not playerHasPartner then
     local partner = GetBestDancePartner()
     if partner ~= nil then
       if ReadyCast(partner.id, Skills.ClosedPosition) then return true end
@@ -65,14 +65,14 @@ function profile.Cast(target)
 
 end
 
-function profile.Draw()
-  profile.AutoPartner = GUI:Checkbox("Auto Partner", profile.AutoPartner)
-  profile.AutoPeloton = GUI:Checkbox("Auto Peloton", profile.AutoPeloton)
+function Dancer:Draw()
+  self.AutoPartner = GUI:Checkbox("Auto Partner", self.AutoPartner)
+  self.AutoPeloton = GUI:Checkbox("Auto Peloton", self.AutoPeloton)
 end
 
-function profile.OnLoad()
-  profile.AutoPeloton = ACR.GetSetting("OpenACR_Dancer_AutoPeloton", true)
-  profile.AutoPartner = ACR.GetSetting("OpenACR_Dancer_AutoPartner", true)
+function Dancer:OnLoad()
+  self.AutoPeloton = ACR.GetSetting("OpenACR_Dancer_AutoPeloton", true)
+  self.AutoPartner = ACR.GetSetting("OpenACR_Dancer_AutoPartner", true)
 end
 
-return profile
+return Dancer

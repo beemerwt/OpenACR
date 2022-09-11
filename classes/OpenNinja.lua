@@ -1,4 +1,4 @@
-local profile = {
+local Ninja = {
   ComboEnabled       = true,
   NinkiEnabled       = true,
   NinjutsuEnabled    = true,
@@ -135,7 +135,7 @@ local function Ninjutsu(numNearby)
   if not IsCapable(Skills.Ninjutsu) then return false end
   if not IsNinjutsuReady() then return false end
 
-  if numNearby > 2 and profile.AOEEnabled then
+  if numNearby > 2 and Ninja.AOEEnabled then
     if not PlayerHasBuff(Buffs.Doton) and IsCapable(Skills.Doton) then
       return QueueMudra(Mudras.Doton)
     end
@@ -157,7 +157,7 @@ local function Ninjutsu(numNearby)
     end
   end
 
-  if numNearby > 1 and profile.AOEEnabled then
+  if numNearby > 1 and Ninja.AOEEnabled then
     if not PlayerHasBuff(Buffs.Doton) and IsCapable(Skills.Doton) then
       return QueueMudra(Mudras.Doton)
     end
@@ -212,7 +212,7 @@ end
 
 -- The Cast() function is where the magic happens.
 -- Action code should be called and fired here.
-function profile.Cast(target)
+function Ninja:Cast(target)
   activeTrickAttack = GetTargetDebuff(Buffs.TrickAttack)
   local playerHasTCJ        = PlayerHasBuff(Buffs.TenChiJin)
   local playerHasMudra      = PlayerHasBuff(Buffs.Mudra)
@@ -265,14 +265,14 @@ function profile.Cast(target)
     return QueueMudra(Mudras.Huton)
   end
 
-  if Player.gauge[2] < 30000 and profile.ACEnabled then
+  if Player.gauge[2] < 30000 and self.ACEnabled then
     local isImmediate = Player.gauge[2] <= 3000
     if isImmediate or Player.lastcomboid == Skills.GustSlash then
       if ReadyCast(target.id, Skills.ArmorCrush) then return true end
     end
   end
 
-  if profile.RaijuEnabled and #nearby < 2 then
+  if self.RaijuEnabled and #nearby < 2 then
     if PlayerHasBuff(Buffs.RaijuReady) then
       if ReadyCast(target.id, Skills.FleetingRaiju, Skills.ForkedRaiju) then
         return true
@@ -280,7 +280,7 @@ function profile.Cast(target)
     end
   end
 
-  if profile.NinkiEnabled then
+  if self.NinkiEnabled then
     local ninkiPower = Player.gauge[1]
 
     -- Bunshin = Kamaitachi | Cast both on cooldown
@@ -295,32 +295,32 @@ function profile.Cast(target)
     end
   end
 
-  if profile.TCJEnabled then
+  if self.TCJEnabled then
     if TrickAttackIsActive() or MugIsActive() then
-      if (profile.MeisuiEnabled and not IsOnCooldown(Skills.Meisui)) or not profile.MeisuiEnabled then
+      if (self.MeisuiEnabled and not IsOnCooldown(Skills.Meisui)) or not self.MeisuiEnabled then
         if ReadyCast(Player.id, Skills.TenChiJin) then return true end
       end
     end
   end
 
   -- TA becomes priority when Suiton is active
-  if profile.TAEnabled then
+  if self.TAEnabled then
     if ReadyCast(target.id, Skills.TrickAttack) then return true end
   end
 
-  if profile.AssassinateEnabled then
+  if self.AssassinateEnabled then
     if TrickAttackIsActive() and #nearby < 3 then
       if ReadyCast(target.id, Skills.Assassinate, Skills.DreamWithinADream) then return true end
     end
   end
 
-  if profile.MeisuiEnabled then
+  if self.MeisuiEnabled then
     if PlayerHasBuff(Buffs.Suiton) and IsOnCooldown(Skills.TrickAttack) then
       if ReadyCast(Player.id, Skills.Meisui) then return true end
     end
   end
 
-  if profile.NinjutsuEnabled then
+  if self.NinjutsuEnabled then
     if Ninjutsu(#nearby) then
       return true
     end
@@ -332,16 +332,16 @@ function profile.Cast(target)
     end
   end
 
-  if profile.ComboEnabled then
+  if self.ComboEnabled then
     if BasicCombo(target) then return true end
-    if profile.AOEEnabled and #nearby > 2 and IsCapable(Skills.DeathBlossom) then
+    if self.AOEEnabled and #nearby > 2 and IsCapable(Skills.DeathBlossom) then
       if ReadyCast(Player.id, Skills.DeathBlossom) then return true end
     else
       if ReadyCast(target.id, Skills.SpinningEdge) then return true end
     end
   end
 
-  if profile.ThrowingEnabled then
+  if self.ThrowingEnabled then
     if ReadyCast(target.id, Skills.ThrowingDagger) and IsCapable(Skills.ThrowingDagger) then
       return true
     end
@@ -351,33 +351,33 @@ function profile.Cast(target)
 end
 
 -- The Draw() function provides a place where a developer can show custom options.
-function profile.Draw()
-  profile.AOEEnabled = GUI:Checkbox("AOE Enabled", profile.AOEEnabled)
-  profile.ComboEnabled = GUI:Checkbox("Combo Enabled", profile.ComboEnabled)
-  profile.NinkiEnabled = GUI:Checkbox("Ninki Enabled", profile.NinkiEnabled)
-  profile.NinjutsuEnabled = GUI:Checkbox("Ninjutsu Enabled", profile.NinjutsuEnabled)
-  profile.RaijuEnabled = GUI:Checkbox("Raiju Enabled", profile.RaijuEnabled)
-  profile.TCJEnabled = GUI:Checkbox("Ten Chi Jin", profile.TCJEnabled)
-  profile.ACEnabled = GUI:Checkbox("Armor Crush", profile.ACEnabled)
-  profile.ThrowingEnabled = GUI:Checkbox("Throwing Dagger", profile.ThrowingEnabled)
-  profile.AssassinateEnabled = GUI:Checkbox("Assassinate", profile.AssassinateEnabled)
-  profile.MeisuiEnabled = GUI:Checkbox("Meisui", profile.MeisuiEnabled)
-  profile.TAEnabled = GUI:Checkbox("Trick Attack", profile.TAEnabled)
+function Ninja:Draw()
+  self.AOEEnabled = GUI:Checkbox("AOE Enabled", self.AOEEnabled)
+  self.ComboEnabled = GUI:Checkbox("Combo Enabled", self.ComboEnabled)
+  self.NinkiEnabled = GUI:Checkbox("Ninki Enabled", self.NinkiEnabled)
+  self.NinjutsuEnabled = GUI:Checkbox("Ninjutsu Enabled", self.NinjutsuEnabled)
+  self.RaijuEnabled = GUI:Checkbox("Raiju Enabled", self.RaijuEnabled)
+  self.TCJEnabled = GUI:Checkbox("Ten Chi Jin", self.TCJEnabled)
+  self.ACEnabled = GUI:Checkbox("Armor Crush", self.ACEnabled)
+  self.ThrowingEnabled = GUI:Checkbox("Throwing Dagger", self.ThrowingEnabled)
+  self.AssassinateEnabled = GUI:Checkbox("Assassinate", self.AssassinateEnabled)
+  self.MeisuiEnabled = GUI:Checkbox("Meisui", self.MeisuiEnabled)
+  self.TAEnabled = GUI:Checkbox("Trick Attack", self.TAEnabled)
 end
 
 -- The OnLoad() function is fired when a profile is prepped and loaded by ACR.
-function profile.OnLoad()
-  profile.ComboEnabled = ACR.GetSetting("OpenACR_Ninja_ComboEnabled", true)
-  profile.NinkiEnabled = ACR.GetSetting("OpenACR_Ninja_NinkiEnabled", true)
-  profile.AOEEnabled = ACR.GetSetting("OpenACR_Ninja_AOEEnabled", true)
-  profile.NinjutsuEnabled = ACR.GetSetting("OpenACR_Ninja_NinjutsuEnabled", true)
-  profile.RaijuEnabled = ACR.GetSetting("OpenACR_Ninja_RaijuEnabled", true)
-  profile.TCJEnabled = ACR.GetSetting("OpenACR_Ninja_TenChiJinEnabled", true)
-  profile.ACEnabled = ACR.GetSetting("OpenACR_Ninja_ArmorCrushEnabled", true)
-  profile.ThrowingEnabled = ACR.GetSetting("OpenACR_Ninja_ThrowingDaggerEnabled", true)
-  profile.AssassinateEnabled = ACR.GetSetting("OpenACR_Ninja_AssassinateEnabled", true)
-  profile.MeisuiEnabled = ACR.GetSetting("OpenACR_Ninja_MeisuiEnabled", true)
-  profile.TAEnabled = ACR.GetSetting("OpenACR_Ninja_TrickAttackEnabled", true)
+function Ninja:OnLoad()
+  self.ComboEnabled = ACR.GetSetting("OpenACR_Ninja_ComboEnabled", true)
+  self.NinkiEnabled = ACR.GetSetting("OpenACR_Ninja_NinkiEnabled", true)
+  self.AOEEnabled = ACR.GetSetting("OpenACR_Ninja_AOEEnabled", true)
+  self.NinjutsuEnabled = ACR.GetSetting("OpenACR_Ninja_NinjutsuEnabled", true)
+  self.RaijuEnabled = ACR.GetSetting("OpenACR_Ninja_RaijuEnabled", true)
+  self.TCJEnabled = ACR.GetSetting("OpenACR_Ninja_TenChiJinEnabled", true)
+  self.ACEnabled = ACR.GetSetting("OpenACR_Ninja_ArmorCrushEnabled", true)
+  self.ThrowingEnabled = ACR.GetSetting("OpenACR_Ninja_ThrowingDaggerEnabled", true)
+  self.AssassinateEnabled = ACR.GetSetting("OpenACR_Ninja_AssassinateEnabled", true)
+  self.MeisuiEnabled = ACR.GetSetting("OpenACR_Ninja_MeisuiEnabled", true)
+  self.TAEnabled = ACR.GetSetting("OpenACR_Ninja_TrickAttackEnabled", true)
 end
 
 -- The OnClick function is fired when a user clicks on the ACR party interface.
@@ -387,13 +387,13 @@ end
 -- controlState /bool/ - Is control currently pressed?
 -- altState /bool/ - Is alt currently pressed?
 -- entity /table/ - The entity information for the party member that was clicked on.
-function profile.OnClick(mouse,shiftState,controlState,altState,entity)
+function Ninja:OnClick(mouse,shiftState,controlState,altState,entity)
 
 end
 
 -- The OnUpdate() function is fired on the gameloop, like any other OnUpdate function found in FFXIVMinion code.
-function profile.OnUpdate(event, tickcount)
+function Ninja:OnUpdate(event, tickcount)
 end
 
 -- Return the profile to ACR, so it can be read.
-return profile
+return Ninja

@@ -52,14 +52,14 @@ end
 -- Adds a customizable header to the top of the ffxivminion task window.
 function OpenACR.DrawHeader()
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.DrawHeader then
-    OpenACR.CurrentProfile.DrawHeader()
+    OpenACR.CurrentProfile:DrawHeader()
   end
 end
 
 -- Adds a customizable footer to the top of the ffxivminion task window.
 function OpenACR.DrawFooter()
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.DrawFooter then
-    OpenACR.CurrentProfile.DrawFooter()
+    OpenACR.CurrentProfile:DrawFooter()
   end
 end
 
@@ -76,11 +76,11 @@ function OpenACR.Cast()
 
   -- TODO: Make HP Percent adjustable
   if OpenACR.CurrentRole and Player.hp.percent < 35 then
-    if OpenACR.CurrentRole.Defensives() then return true end
+    if OpenACR.CurrentRole:Defensives() then return true end
   end
 
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Cast then
-    if OpenACR.CurrentProfile.Cast(target) then return true end
+    if OpenACR.CurrentProfile:Cast(target) then return true end
   end
 end
 
@@ -97,13 +97,13 @@ function OpenACR.Draw()
   if OpenACR.CurrentRole ~= nil then
     GUI:Separator()
     GUI:Text("Role")
-    OpenACR.CurrentRole.Draw()
+    OpenACR.CurrentRole:Draw()
   end
 
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Draw then
     GUI:Separator()
     GUI:Text("Class")
-    OpenACR.CurrentProfile.Draw()
+    OpenACR.CurrentProfile:Draw()
   end
 
   GUI:End()
@@ -130,7 +130,7 @@ function OpenACR.ReloadProfile()
   if profile then
     OpenACR.CurrentProfile = profile()
     if OpenACR.CurrentProfile and OpenACR.CurrentProfile.OnLoad then
-      OpenACR.CurrentProfile.OnLoad()
+      OpenACR.CurrentProfile:OnLoad()
     end
   else
     log('An error occurred while loading ' .. ffxivminion.classes[jobId] .. ' profile...')
@@ -148,7 +148,7 @@ function OpenACR.ReloadRole()
   if role then
     OpenACR.CurrentRole = role()
     if OpenACR.CurrentRole and OpenACR.CurrentRole.OnLoad then
-      OpenACR.CurrentRole.OnLoad()
+      OpenACR.CurrentRole:OnLoad()
     end
   else
     log('An error occurred while loading ' .. rolestr .. ' role...')

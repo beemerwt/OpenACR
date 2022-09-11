@@ -40,13 +40,13 @@ local function GetCurrentForm()
   return 0
 end
 
-function Monk.Cast(target)
+function Monk:Cast(target)
 end
 
-function Monk.Draw()
+function Monk:Draw()
 end
 
-function Monk.OnLoad()
+function Monk:OnLoad()
 end
 
 return Monk

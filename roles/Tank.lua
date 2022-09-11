@@ -1,6 +1,6 @@
 local Tank = {}
 
-function Tank.Defensives()
+function Tank:Defensives()
 end
 
 return Tank
