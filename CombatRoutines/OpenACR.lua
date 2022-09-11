@@ -15,6 +15,7 @@ OpenACR = {
     [FFXIV.JOBS.SAMURAI] = true,
     [FFXIV.JOBS.REAPER] = true,
     [FFXIV.JOBS.MONK] = true,
+    [FFXIV.JOBS.DANCER] = true,
   },
 
   -- All of the jobs implemented so far...
@@ -23,10 +24,14 @@ OpenACR = {
     [FFXIV.JOBS.ROGUE] = "OpenRogue.lua",
     [FFXIV.JOBS.PUGILIST] = "OpenPugilist.lua",
 
+    -- Advanced classes
     [FFXIV.JOBS.NINJA] = "OpenNinja.lua",
+    [FFXIV.JOBS.MONK] = "OpenMonk.lua",
+
+    -- Special classes
     [FFXIV.JOBS.SAMURAI] = "OpenSamurai.lua",
     [FFXIV.JOBS.REAPER] = "OpenReaper.lua",
-    [FFXIV.JOBS.MONK] = "OpenMonk.lua",
+    [FFXIV.JOBS.DANCER] = "OpenDancer.lua",
   },
 
   CurrentRole = nil,
