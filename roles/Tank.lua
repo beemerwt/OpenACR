@@ -19,12 +19,13 @@ local Skills = {
 }
 
 function Tank:Defensives()
-  if Player.hp.percent < 35 then
-    if ReadyCast(Player.id, Skills.Rampart) then return true end
+  local nearby = GetNearbyEnemies(5)
+  if #nearby > 4 or (Player.hp.percent < 50 and #nearby > 2) then
+    if ReadyCast(Player.id, Skills.Reprisal) then return true end
   end
 
-  if Player.hp.percent < 50 then
-    if ReadyCast(Player.id, Skills.Reprisal) then return true end
+  if Player.hp.percent < 35 or (Player.hp.percent < 50 and #nearby < 3) then
+    if ReadyCast(Player.id, Skills.Rampart) then return true end
   end
 
   return false
