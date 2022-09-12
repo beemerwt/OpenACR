@@ -272,6 +272,9 @@ function Ninja:Cast(target)
     return false
   end
 
+  -- We want to use Kassatsu ONLY for Hyosho
+  -- Use in burst with Trick attack for easier time
+
   if playerMudra ~= nil then
     if playerMudra.stacks == 57 then
       if ReadyCast(target.id, Skills.Suiton) then return true end
@@ -280,7 +283,8 @@ function Ninja:Cast(target)
     elseif playerMudra.stacks == 27 then
       if ReadyCast(Player.id, Skills.Huton) then return true end
     elseif playerMudra.stacks == 13 then
-      if ReadyCast(Player.id, Skills.Hyosho) then return true end
+      -- NOT WORKING
+      if ReadyCast(target.id, Skills.Hyosho) then return true end
     elseif playerMudra.stacks == 9 then
       if ReadyCast(target.id, Skills.Raiton) then return true end
     elseif playerMudra.stacks == 6 then
@@ -296,7 +300,7 @@ function Ninja:Cast(target)
     return false
   end
 
-  local nearby = GetNearbyEnemies(10)
+  local nearby = GetNearbyEnemies(5)
 
   -- Cast Huton if player doesn't have it.
   if Player.gauge[2] == 0 and IsNinjutsuReady() and IsCapable(Skills.Huton) then

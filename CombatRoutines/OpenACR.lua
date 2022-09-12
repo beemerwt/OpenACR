@@ -24,6 +24,7 @@ OpenACR = {
     [FFXIV.JOBS.REAPER] = true,
 
     [FFXIV.JOBS.DANCER] = true,
+    [FFXIV.JOBS.ARCANIST] = true,
   },
 
   -- All of the jobs implemented so far...
@@ -46,6 +47,8 @@ OpenACR = {
 
     -- Advanced Ranged DPS
     [FFXIV.JOBS.DANCER] = "Dancer.lua",
+
+    [FFXIV.JOBS.ARCANIST] = "Arcanist.lua"
   },
 
   CurrentRole = nil,
