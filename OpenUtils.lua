@@ -44,14 +44,9 @@ function ReadyCast(target, ...)
 end
 
 function GetNearbyEnemies(radius)
-  local attackables = MEntityList("alive,attackable");
+  local attackables = MEntityList("alive,attackable,maxdistance=" .. radius);
   if not table.valid(attackables) then return {} end
-
-  -- Gets targets within range of AOE attacks centered on player
-  local nearby = FilterByProximity(attackables, Player.pos, radius);
-  if not table.valid(nearby) then return {} end
-
-  return nearby
+  return attackables
 end
 
 function GetACRTarget()
