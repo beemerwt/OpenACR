@@ -9,36 +9,42 @@ OpenACR = {
   },
 
   classes = {
+    [FFXIV.JOBS.GLADIATOR] = true,
+    [FFXIV.JOBS.MARAUDER] = true,
+    -- DRK
+    -- GUN
     [FFXIV.JOBS.ROGUE] = true,
     [FFXIV.JOBS.PUGILIST] = true,
     [FFXIV.JOBS.LANCER] = true,
-    [FFXIV.JOBS.MARAUDER] = true,
 
-    [FFXIV.JOBS.NINJA] = true,
     [FFXIV.JOBS.MONK] = true,
     [FFXIV.JOBS.DRAGOON] = true,
-
+    [FFXIV.JOBS.NINJA] = true,
     [FFXIV.JOBS.SAMURAI] = true,
     [FFXIV.JOBS.REAPER] = true,
+
     [FFXIV.JOBS.DANCER] = true,
   },
 
   -- All of the jobs implemented so far...
   profiles = {
     -- Base classes
-    [FFXIV.JOBS.ROGUE] = "Rogue.lua",
-    [FFXIV.JOBS.PUGILIST] = "Pugilist.lua",
-    [FFXIV.JOBS.LANCER] = "Lancer.lua",
+    [FFXIV.JOBS.GLADIATOR] = "Gladiator.lua",
     [FFXIV.JOBS.MARAUDER] = "Marauder.lua",
 
-    -- Advanced classes
-    [FFXIV.JOBS.NINJA] = "Ninja.lua",
+    [FFXIV.JOBS.PUGILIST] = "Pugilist.lua",
+    [FFXIV.JOBS.LANCER] = "Lancer.lua",
+    [FFXIV.JOBS.ROGUE] = "Rogue.lua",
+
+
+    -- Advanced Melee DPS
     [FFXIV.JOBS.MONK] = "Monk.lua",
     [FFXIV.JOBS.DRAGOON] = "Dragoon.lua",
-
-    -- Special classes
+    [FFXIV.JOBS.NINJA] = "Ninja.lua",
     [FFXIV.JOBS.SAMURAI] = "Samurai.lua",
     [FFXIV.JOBS.REAPER] = "Reaper.lua",
+
+    -- Advanced Ranged DPS
     [FFXIV.JOBS.DANCER] = "Dancer.lua",
   },
 
