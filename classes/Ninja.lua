@@ -389,17 +389,19 @@ end
 
 -- The Draw() function provides a place where a developer can show custom options.
 function Ninja:Draw()
-  self.AOEEnabled = GUI:Checkbox("AOE Enabled", self.AOEEnabled)
-  self.ComboEnabled = GUI:Checkbox("Combo Enabled", self.ComboEnabled)
-  self.NinkiEnabled = GUI:Checkbox("Ninki Enabled", self.NinkiEnabled)
-  self.NinjutsuEnabled = GUI:Checkbox("Ninjutsu Enabled", self.NinjutsuEnabled)
-  self.RaijuEnabled = GUI:Checkbox("Raiju Enabled", self.RaijuEnabled)
-  self.TCJEnabled = GUI:Checkbox("Ten Chi Jin", self.TCJEnabled)
-  self.ACEnabled = GUI:Checkbox("Armor Crush", self.ACEnabled)
-  self.ThrowingEnabled = GUI:Checkbox("Throwing Dagger", self.ThrowingEnabled)
-  self.AssassinateEnabled = GUI:Checkbox("Assassinate", self.AssassinateEnabled)
-  self.MeisuiEnabled = GUI:Checkbox("Meisui", self.MeisuiEnabled)
-  self.TAEnabled = GUI:Checkbox("Trick Attack", self.TAEnabled)
+  GUI:BeginChild("Class##SkillWindow", 0.0, 0.0, true)
+  self.AOEEnabled = OpenACR.ListCheckboxItem("AOE Enabled", self.AOEEnabled, 145)
+  self.ComboEnabled = OpenACR.ListCheckboxItem("Combo Enabled", self.ComboEnabled, 145)
+  self.NinkiEnabled = OpenACR.ListCheckboxItem("Ninki Enabled", self.NinkiEnabled, 145)
+  self.NinjutsuEnabled = OpenACR.ListCheckboxItem("Ninjutsu Enabled", self.NinjutsuEnabled, 145)
+  self.RaijuEnabled = OpenACR.ListCheckboxItem("Raiju Enabled", self.RaijuEnabled, 145)
+  self.TCJEnabled = OpenACR.ListCheckboxItem("Ten Chi Jin", self.TCJEnabled, 145)
+  self.ACEnabled = OpenACR.ListCheckboxItem("Armor Crush", self.ACEnabled, 145)
+  self.ThrowingEnabled = OpenACR.ListCheckboxItem("Throwing Dagger", self.ThrowingEnabled, 145)
+  self.AssassinateEnabled = OpenACR.ListCheckboxItem("Assassinate", self.AssassinateEnabled, 145)
+  self.MeisuiEnabled = OpenACR.ListCheckboxItem("Meisui", self.MeisuiEnabled, 145)
+  self.TAEnabled = OpenACR.ListCheckboxItem("Trick Attack", self.TAEnabled, 145)
+  GUI:EndChild()
 end
 
 -- The OnLoad() function is fired when a profile is prepped and loaded by ACR.
