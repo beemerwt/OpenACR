@@ -18,9 +18,12 @@ local Skills = {
   Gemshine = 25883,
 
   Ruin = 163,
+  Ruin2 = 172,
   RubyRuin = 25808,
   TopazRuin = 25809,
+  TopazRuin2 = 25812,
   EmeraldRuin = 25810,
+  EmeraldRuin2 = 25813,
 
   Outburst = 16511,
   RubyOutburst = 25814,
@@ -40,8 +43,15 @@ function Arcanist:Cast(target)
   local topazReady = Player.gauge[6] == 1 and gemCharges == 0
   local emeraldReady = Player.gauge[7] == 1 and gemCharges == 0
 
+  if Player.pet == nil then
+    if ReadyCast(Player.id, Skills.Carbuncle) then return true end
+  end
+
   if Player.hp.percent < 50 then
     if ReadyCast(Player.id, Skills.RadiantAegis) then return true end
+    if not Player:IsMoving() then
+      if ReadyCast(Player.id, Skills.Physick) then return true end
+    end
   end
 
   if Player.mp.percent < 50 then
@@ -67,18 +77,21 @@ function Arcanist:Cast(target)
 
   if self.AOE and #nearby > 2 then  
     if ReadyCast(target.id, Skills.RubyOutburst, Skills.TopazOutburst, Skills.EmeraldOutburst) then return true end
-    if ReadyCast(Player.id, Skills.Outburst) then return true end
+    if ReadyCast(target.id, Skills.Outburst) then return true end
   end
 
   if not Player:IsMoving() then
     if ReadyCast(target.id, Skills.RubyRuin) then return true end
   end
 
-  if ReadyCast(target.id, Skills.TopazRuin, Skills.EmeraldRuin) then return true end
+  if ReadyCast(target.id, Skills.TopazRuin2, Skills.TopazRuin) then return true end
+  if ReadyCast(target.id, Skills.EmeraldRuin2, Skills.EmeraldRuin) then return true end
 
   if not Player:IsMoving() then
-    if ReadyCast(target.id, Skills.Ruin) then return true end
+    if ReadyCast(target.id, Skills.Ruin2, Skills.Ruin) then return true end
   end
+
+  return false
 end
 
 function Arcanist:Draw()
@@ -87,6 +100,13 @@ end
 
 function Arcanist:OnLoad()
   self.AOE = ACR.GetSetting("OpenACR_Arcanist_AOEEnabled", true)
+end
+
+function Arcanist:Update()
+  -- TODO: THIS
+  --if MIsCasting() and Player:GetTarget() == nil and then
+    --ActionList:StopCasting()
+  --end
 end
 
 return Arcanist
