@@ -12,6 +12,19 @@ CachedTarget = nil
 CachedAction = {}
 CachedBuff = nil
 
+function MGetAction(skillId)
+  local memString = "MGetAction;"..tostring(skillId)
+
+  local memoized = GetMemoized(memString)
+  if memoized then
+    return memoized
+  else
+    local action = ActionList:Get(1, skillId)
+    SetMemoized(memString, skillId)
+    return action
+  end
+end
+
 function IsCapable(skillId)
   if CachedAction.id ~= skillId then
     CachedAction = ActionList:Get(1, skillId)
@@ -28,9 +41,15 @@ function IsOnCooldown(skillId)
   return CachedAction.isoncd
 end
 
+function IsReady(skillId)
+  local action = MGetAction(skillId);
+  if action == nil then return false end
+  return action:IsReady()
+end
+
 function ReadyCast(target, ...)
-  for _,v in ipairs(arg) do
-    local action = ActionList:Get(1, v)
+  for _,skillId in ipairs(arg) do
+    local action = MGetAction(skillId)
     if table.valid(action) then
       if action:IsReady(target) then
         if action:Cast(target) then
