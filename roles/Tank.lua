@@ -79,9 +79,9 @@ function Tank:Cast(target)
 end
 
 function Tank:Draw()
-  self.DefensivesEnabled = GUI:Checkbox("Defensives Enabled", self.DefensivesEnabled)
-  self.ControlEnabled = GUI:Checkbox("Control Enabled", self.ControlEnabled)
-  self.ProvokeEnabled = GUI:Checkbox("Provoke", self.ProvokeEnabled)
+  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled, 170)
+  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled, 170)
+  self.ProvokeEnabled = OpenACR.ListCheckboxItem("Provoke", self.ProvokeEnabled, 170)
 end
 
 function Tank:OnLoad()
