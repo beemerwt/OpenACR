@@ -43,7 +43,7 @@ local Skills = {
   Shukuchi        = 2262,
   ArmorCrush      = 3563,
   TenChiJin       = 7403,
-  Kamaitachi      = 16493,
+  Kamaitachi      = 25774,
   DreamWithinADream = 3566, -- No GCD
   Assassinate     = 2246,
 
@@ -77,7 +77,6 @@ local Skills = {
   Huton       = 2269,
   MudraHuton  = 18879,
 
-
   Kassatsu    = 2264,
 
   -- Raijus
@@ -100,15 +99,28 @@ local Skills = {
 }
 
 local Mudras = {
-  Fuma   = { 'ten', 'ten' },
-  Katon  = { 'chi', 'ten' },
-  Raiton = { 'ten', 'chi' },
-  Hyoton = { 'ten', 'jin' },
-  Hyosho = { 'ten', 'jin' },
-  Goka   = { 'jin', 'ten' },
-  Doton  = { 'ten', 'jin', 'chi' },
-  Huton  = { 'jin', 'chi', 'ten' },
-  Suiton = { 'ten', 'chi', 'jin' },
+  Fuma   = { 'ten' },
+
+  Raiton = { 'ten', 'chi' }, -- 9
+  Katon  = { 'chi', 'ten' }, -- 6
+
+  Hyosho = { 'ten', 'jin' }, -- 13
+  Goka   = { 'jin', 'ten' }, -- 7
+
+  Huton  = { 'jin', 'chi', 'ten' }, -- 27
+  Doton  = { 'ten', 'jin', 'chi' }, -- 45, 39 (Jin Ten Chi)
+  Suiton = { 'ten', 'chi', 'jin' }, -- 57
+}
+
+local MudraActions = {
+  [1] = Skills.Fuma,
+  [6] = Skills.Katon,
+  [7] = Skills.Goka,
+  [9] = Skills.Raiton,
+  [13] = Skills.Hyosho,
+  [27] = Skills.Huton,
+  [45] = Skills.Doton,
+  [57] = Skills.Suiton
 }
 
 local function IsNinjutsuReady()
@@ -175,10 +187,6 @@ local function Ninjutsu(numNearby)
   return false
 end
 
-local usedFuma = false
-local usedRaiton = false
-local usedSuiton = false
-
 local function CastMudra(name)
   if name == 'ten' then
     local ten = ActionList:Get(1, Skills.Ten)
@@ -218,9 +226,9 @@ local function BasicCombo(target)
   return false
 end
 
-local function GetMudra()
+local function GetBuff(id)
   for i,_ in ipairs(Player.buffs) do
-    if Player.buffs[i].id == Buffs.Mudra then
+    if Player.buffs[i].id == id then
       return Player.buffs[i]
     end
   end
@@ -228,14 +236,27 @@ local function GetMudra()
   return nil
 end
 
+local function DidNotCastMudraLast()
+  return not In(Player.lastcastid,
+    Skills.Ten,
+    Skills.Chi,
+    Skills.Jin,
+    Skills.MudraTen,
+    Skills.MudraChi,
+    Skills.MudraJin)
+end
+
+local usedFuma = false
+local usedRaiton = false
+local usedSuiton = false
+
 -- The Cast() function is where the magic happens.
 -- Action code should be called and fired here.
 function Ninja:Cast(target)
   TargetHasTrickAttack  = HasBuff(target.id, Buffs.TrickAttack)
   TargetHasMug          = HasBuff(target.id, Buffs.Mug)
-
-  local playerHasTCJ    = HasBuff(Player.id, Buffs.TenChiJin)
-  local playerMudra     = GetMudra()
+  local playerTCJ       = GetBuff(Buffs.TenChiJin)
+  local playerMudra     = GetBuff(Buffs.Mudra)
 
   -- TimeSince Failsafe
   if #MudraQueue > 0 and TimeSince(StartMudra) < 6000 then
@@ -247,24 +268,21 @@ function Ninja:Cast(target)
     return false
   end
 
-  if playerHasTCJ then
-    if not usedFuma then
+  if playerTCJ ~= nil then
+    if playerTCJ.stacks == 0 then
       if ReadyCast(target.id, Skills.TCJFuma) then
-        usedFuma = true
         return true
       end
     end
 
-    if not usedRaiton then
+    if playerTCJ.stacks == 1 then
       if ReadyCast(target.id, Skills.TCJRaiton) then
-        usedRaiton = true
         return true
       end
     end
 
-    if not usedSuiton then
+    if playerTCJ.stacks == 9 then
       if ReadyCast(target.id, Skills.TCJSuiton) then
-        usedSuiton = true
         return true
       end
     end
@@ -272,31 +290,14 @@ function Ninja:Cast(target)
     return false
   end
 
-  -- We want to use Kassatsu ONLY for Hyosho
-  -- Use in burst with Trick attack for easier time
-
   if playerMudra ~= nil then
-    if playerMudra.stacks == 57 then
-      if ReadyCast(target.id, Skills.Suiton) then return true end
-    elseif playerMudra.stacks == 45 then
-      if ReadyCast(Player.id, Skills.Doton) then return true end
-    elseif playerMudra.stacks == 27 then
-      if ReadyCast(Player.id, Skills.Huton) then return true end
-    elseif playerMudra.stacks == 13 then
-      -- NOT WORKING
-      if ReadyCast(target.id, Skills.Hyosho) then return true end
-    elseif playerMudra.stacks == 9 then
-      if ReadyCast(target.id, Skills.Raiton) then return true end
-    elseif playerMudra.stacks == 6 then
-      if HasBuff(Player.id, Buffs.Kassatsu) then
-        if ReadyCast(target.id, Skills.Goka) then return true end
-      else
-        if ReadyCast(target.id, Skills.Katon) then return true end
-      end
+    local id = MudraActions[playerMudra.stacks]
+    if id == Skills.Huton or id == Skills.Doton then
+      if ReadyCast(Player.id, id) then return true end
+    else
+      if ReadyCast(target.id, id) then return true end
     end
 
-    -- if ReadyCast(Player.id, Skills.Ninjutsu) then return true end
-    -- if ReadyCast(target.id, Skills.Ninjutsu) then return true end
     return false
   end
 
@@ -326,7 +327,7 @@ function Ninja:Cast(target)
     local ninkiPower = Player.gauge[1]
 
     -- Bunshin = Kamaitachi | Cast both on cooldown
-    if ReadyCast(target.id, Skills.Kamaitachi, Skills.Bunshin) then return true end
+    if ReadyCast(target.id, Skills.Kamaitachi) then return true end
     if ReadyCast(Player.id, Skills.Bunshin) then return true end
 
     -- Ninki Management, The big thing is that you will never want to overcap it
@@ -364,9 +365,8 @@ function Ninja:Cast(target)
       return true
     end
 
-    -- Priority of Kassatsu is not very high
-    -- We just need to throw it into our rotation on CD
-    if not IsNinjutsuReady() and not HasBuff(Player.id, Buffs.Mudra) then
+    -- BUG: There is a frame inbetween where this is false and causes it to be cast before all charges are expended
+    if not IsNinjutsuReady() and playerMudra ~= nil and DidNotCastMudraLast() then
       if ReadyCast(Player.id, Skills.Kassatsu) then return true end
     end
   end
