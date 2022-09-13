@@ -2,5 +2,6 @@
 Name=OpenACR
 Dependencies=minionlib
 Version=1
+CreateFolders=data
 Files=CombatRoutines/OpenACR.lua,OpenUtils.lua
 Enabled=1
