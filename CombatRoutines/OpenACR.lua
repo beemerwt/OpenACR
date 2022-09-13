@@ -25,6 +25,7 @@ OpenACR = {
 
     [FFXIV.JOBS.DANCER] = true,
     [FFXIV.JOBS.ARCANIST] = true,
+    [FFXIV.JOBS.BLUEMAGE] = true,
   },
 
   -- All of the jobs implemented so far...
@@ -48,7 +49,8 @@ OpenACR = {
     -- Advanced Ranged DPS
     [FFXIV.JOBS.DANCER] = "Dancer.lua",
 
-    [FFXIV.JOBS.ARCANIST] = "Arcanist.lua"
+    [FFXIV.JOBS.ARCANIST] = "Arcanist.lua",
+    [FFXIV.JOBS.BLUEMAGE] = "BlueMage.lua",
   },
 
   CurrentRole = nil,
@@ -66,8 +68,6 @@ end
 
 -- Fired when a user pressed "View Profile Options" on the main ACR window.
 function OpenACR.OnOpen()
-  log('OnOpen Called')
-  -- Do some kind of flash to get their attention on the DrawCall window
   OpenACR.GUI.open = true
 end
 
@@ -100,15 +100,19 @@ end
 function OpenACR.Draw()
   if not OpenACR.GUI.open then return end
 
-  OpenACR.GUI.visible, OpenACR.GUI.open = GUI:Begin(OpenACR.GUI.name, OpenACR.GUI.open, GUI.WindowFlags_NoResize)
+  GUI:SetNextWindowSize(195, 270)
+  OpenACR.GUI.visible, OpenACR.GUI.open = GUI:Begin(OpenACR.GUI.name, OpenACR.GUI.open, GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse)
 
   if OpenACR.GUI.visible then
+    GUI:AlignFirstTextHeightToWidgets()
     GUI:Text("Current Role: " .. GetRoleString(Player.job))
-    GUI:Text("Current Class: " .. ffxivminion.classes[Player.job])
+    GUI:SameLine(140)
+    if GUI:Button("Reload") then OpenACR.ReloadRole() end
 
-    if GUI:Button("Reload Role") then OpenACR.ReloadRole() end
-    GUI:SameLine()
-    if GUI:Button("Reload Profile") then OpenACR.ReloadProfile() end
+    GUI:AlignFirstTextHeightToWidgets()
+    GUI:Text("Current Class: " .. ffxivminion.classes[Player.job])
+    GUI:SameLine(140)
+    if GUI:Button("Reload##1") then OpenACR.ReloadProfile() end
 
     if OpenACR.CurrentRole ~= nil then
       GUI:Separator()
@@ -127,6 +131,9 @@ function OpenACR.Draw()
 end
 
 function OpenACR.OnUpdate(event, tickcount)
+  if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Update then
+    OpenACR.CurrentProfile:Update()
+  end
 end
 
 function OpenACR.OnLoad()
@@ -171,6 +178,28 @@ function OpenACR.ReloadRole()
     log('An error occurred while loading ' .. rolestr .. ' role...')
     log(roleError)
   end
+end
+
+function OpenACR.LoadPersistentTable(name)
+	if (OpenACR.ModuleFunctions ~= nil and OpenACR.ModuleFunctions.ReadModuleFile ~= nil) then
+		local fileInfo = { p = "data" , m = "OpenACR", f =  name }
+		local fileString = OpenACR.ModuleFunctions.ReadModuleFile(fileInfo)
+		if (fileString) then
+			local fileFunction, errorMessage = loadstring(fileString)
+			if (fileFunction) then
+				OpenACR[name] = fileFunction()
+			else
+				OpenACR[name] = {}
+			end
+		end
+	end
+end
+
+function OpenACR.ListCheckboxItem(text, value, align_x)
+  GUI:AlignFirstTextHeightToWidgets()
+  align_x = align_x == nil and 170 or align_x
+  GUI:Text(text) GUI:SameLine(align_x)
+  return GUI:Checkbox("##"..text, value)
 end
 
 -- Return the profile to ACR, so it can be read.
