@@ -131,6 +131,14 @@ function OpenACR.Draw()
 end
 
 function OpenACR.OnUpdate(event, tickcount)
+  if OpenACR.BotRunning then
+    FFXIV_Common_BotRunning = false
+
+    if ml_task_hub:CurrentTask() ~= nil then
+      ml_task_hub:Update()
+    end
+  end
+
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Update then
     OpenACR.CurrentProfile:Update()
   end
