@@ -1,6 +1,6 @@
 -- The Main Profile Hook for OpenACR
 OpenACR = {
-  MainPath = GetLuaModsPath() .. [[\OpenACR\]],
+  MainPath = GetLuaModsPath() .. [[\OpenACR]],
 
   GUI = {
     name = "OpenACR",
@@ -57,6 +57,16 @@ OpenACR = {
   CurrentProfile = nil,
 }
 
+OpenACR.RolePath = OpenACR.MainPath .. [[\roles\]]
+OpenACR.ClassPath = OpenACR.MainPath .. [[\classes\]]
+
+-- Handles all settings that are not relevant to the individual ACR.
+-- Like GUI, unlocks, etc.
+OpenACR.SettingsFile = OpenACR.MainPath .. [[\data\settings.lua]]
+OpenACR.Settings = {}
+
+OpenACR.IsPvP = false
+
 local function log(...)
   local str = '[OpenACR] '
   for i,_ in ipairs(arg) do
@@ -64,6 +74,26 @@ local function log(...)
   end
 
   d(str)
+end
+
+function OpenACR.Cast()
+  if not OpenACR.CurrentRole then return false end
+  if not OpenACR.CurrentProfile then return false end
+
+  local target = MGetTarget()
+  if target == nil then return false end
+
+  if OpenACR.IsPvP and OpenACR.CurrentProfile.PvPCapable then
+    if OpenACR.CurrentProfile.PvPCast then
+      if OpenACR.CurrentProfile:PvPCast(target) then return true end
+    end
+  else
+    if not target.attackable then return false end
+    if OpenACR.CurrentRole:Cast(target) then return true end
+    if OpenACR.CurrentProfile.Cast then
+      if OpenACR.CurrentProfile:Cast(target) then return true end
+    end
+  end
 end
 
 -- Fired when a user pressed "View Profile Options" on the main ACR window.
@@ -82,18 +112,6 @@ end
 function OpenACR.DrawFooter()
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.DrawFooter then
     OpenACR.CurrentProfile:DrawFooter()
-  end
-end
-
-function OpenACR.Cast()
-  local target = MGetTarget()
-  if target == nil then return false end
-  if not target.attackable then return false end
-
-  if OpenACR.CurrentRole:Cast(target) then return true end
-
-  if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Cast then
-    if OpenACR.CurrentProfile:Cast(target) then return true end
   end
 end
 
@@ -131,6 +149,8 @@ function OpenACR.Draw()
 end
 
 function OpenACR.OnUpdate(event, tickcount)
+  OpenACR.IsPvP = IsPVPMap(Player.localmapid)
+
   if OpenACR.BotRunning then
     FFXIV_Common_BotRunning = false
 
@@ -147,6 +167,7 @@ end
 function OpenACR.OnLoad()
   OpenACR.ReloadRole()
   OpenACR.ReloadProfile()
+  OpenACR.LoadSettings()
 end
 
 -- Just reloads the profile file for player's current job
@@ -158,7 +179,7 @@ function OpenACR.ReloadProfile()
     return
   end
 
-  local profile, errorMessage = loadfile(OpenACR.MainPath .. [[\classes\]] .. OpenACR.profiles[jobId], "t")
+  local profile, errorMessage = loadfile(OpenACR.ClassPath .. OpenACR.profiles[jobId], "t")
   if profile then
     OpenACR.CurrentProfile = profile()
     if OpenACR.CurrentProfile and OpenACR.CurrentProfile.OnLoad then
@@ -176,7 +197,7 @@ function OpenACR.ReloadRole()
     or rolestr == "Healer" and "Healer.lua"
     or rolestr == "Tank" and "Tank.lua"
 
-  local role, roleError = loadfile(OpenACR.MainPath .. [[\roles\]] .. rolefile, "t")
+  local role, roleError = loadfile(OpenACR.RolePath .. rolefile, "t")
   if role then
     OpenACR.CurrentRole = role()
     if OpenACR.CurrentRole then
@@ -188,19 +209,23 @@ function OpenACR.ReloadRole()
   end
 end
 
-function OpenACR.LoadPersistentTable(name)
-	if (OpenACR.ModuleFunctions ~= nil and OpenACR.ModuleFunctions.ReadModuleFile ~= nil) then
-		local fileInfo = { p = "data" , m = "OpenACR", f =  name }
-		local fileString = OpenACR.ModuleFunctions.ReadModuleFile(fileInfo)
-		if (fileString) then
-			local fileFunction, errorMessage = loadstring(fileString)
-			if (fileFunction) then
-				OpenACR[name] = fileFunction()
-			else
-				OpenACR[name] = {}
-			end
-		end
-	end
+function OpenACR.SaveSettings(key, value)
+  if key == nil then
+    local wasSaved = FileSave(OpenACR.MainPath .. [[\data\settings.lua]], OpenACR.Settings)
+    if not wasSaved then d("There was an error saving user settings.") end
+    return wasSaved
+  else
+    OpenACR.Settings[key] = value
+    OpenACR.SaveSettings()
+  end
+end
+
+function OpenACR.LoadSettings()
+  if not FileExists(OpenACR.SettingsFile) then
+    OpenACR.SaveSettings() -- Will save default settings
+  else
+    OpenACR.Settings = FileLoad(OpenACR.SettingsFile)
+  end
 end
 
 function OpenACR.ListCheckboxItem(text, value, align_x)
