@@ -1,5 +1,4 @@
 local BlueMage = {
-  path = GetLuaModsPath()..[[\OpenACR\data\BlueMage.lua]],
   AOE = true,
   ShowRed = true,
   ShowYellow = true,
@@ -182,7 +181,7 @@ end
 function BlueMage:Reset()
   Unlocks = FileLoad(GetLuaModsPath() .. [[\OpenACR\BlueMageUnlocks.lua]])
   Unlocks.GUI = { open = false, visible = true }
-  self:Save()
+  OpenACR.SaveSettings("BlueMageUnlocks", Unlocks)
 
   CalcUnlockColumnWidths()
 end
@@ -261,7 +260,7 @@ end
 function BlueMage:Draw()
   if GUI:Button("Skill Unlockables", 195) then
     Unlocks.GUI.open = not Unlocks.GUI.open
-    self:Save()
+    OpenACR.SaveSettings("BlueMageUnlocks", Unlocks)
   end
 
   GUI:SameLine()
@@ -296,7 +295,7 @@ function BlueMage:Draw()
         -- Hide Column
         if GUI:Checkbox("##"..Unlocks[i].mob, false) then
           Unlocks[i].disabled = true
-          self:Save()
+          OpenACR.SaveSettings("BlueMageUnlocks", Unlocks)
 
           CalcUnlockColumnWidths()
         end
@@ -355,11 +354,10 @@ function BlueMage:OnLoad()
   self.AOE = ACR.GetSetting("OpenACR_BlueMage_AOEEnabled", true)
 
   -- Create the default data file...
-  if not FileExists(self.path) then
+  if not OpenACR.Settings['BlueMageUnlocks'] then
     self:Reset()
-    self:Save()
   else
-    Unlocks = FileLoad(self.path)
+    Unlocks = OpenACR.Settings['BlueMageUnlocks']
   end
 
   for i,_ in ipairs(Unlocks) do
