@@ -59,9 +59,9 @@ function Damage:Cast(target)
 end
 
 function Damage:Draw()
-  self.DefensivesEnabled = GUI:Checkbox("Defensives Enabled", self.DefensivesEnabled)
-  self.ControlEnabled = GUI:Checkbox("Control Enabled", self.ControlEnabled)
-  self.TrueNorthEnabled = GUI:Checkbox("True North", self.TrueNorthEnabled)
+  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled, 170)
+  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled, 170)
+  self.TrueNorthEnabled = OpenACR.ListCheckboxItem("True North", self.TrueNorthEnabled, 170)
 end
 
 function Damage:OnLoad()

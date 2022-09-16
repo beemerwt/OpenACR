@@ -29,8 +29,8 @@ function Healer:Cast(target)
 end
 
 function Healer:Draw()
-  self.DefensivesEnabled = GUI:Checkbox("Defensives Enabled", self.DefensivesEnabled)
-  self.ControlEnabled = GUI:Checkbox("Control Enabled", self.ControlEnabled)
+  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled, 170)
+  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled, 170)
 end
 
 function Healer:OnLoad()
