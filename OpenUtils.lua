@@ -6,12 +6,27 @@
 ]]--
 
 OpenACR_IsReady = true
+local AwaitThen = ml_global_information.AwaitThen
 local AwaitDo = ml_global_information.AwaitDo
 
-CachedTarget = nil
-CachedAction = {}
-CachedBuff = nil
+function LookupDuty(name)
+  local dutyList = Duty:GetDutyList()
+  if not dutyList then
+    SendTextCommand("/finder")
+  end
 
+  for k,v in pairs(dutyList) do
+    if string.contains(string.lower(v.name), string.lower(name)) then
+      d(v.name .. ': ' .. tostring(v.id))
+    end
+  end
+end
+
+----------------------------------------------------------------------
+--
+-- Combat
+--
+----------------------------------------------------------------------
 function MGetAction(skillId)
   local memString = "MGetAction;"..tostring(skillId)
 
@@ -25,26 +40,24 @@ function MGetAction(skillId)
   end
 end
 
-function IsCapable(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
+function IsActive(skillId)
+  local action = MGetAction(skillId)
+  return table.valid(action) and action.usable
+end
 
-  return table.valid(CachedAction) and CachedAction.level <= Player.level
+function IsCapable(skillId)
+  local action = MGetAction(skillId)
+  return table.valid(action) and action.level <= Player.level
 end
 
 function IsOnCooldown(skillId)
-  if CachedAction.id ~= skillId then
-    CachedAction = ActionList:Get(1, skillId)
-  end
-
-  return CachedAction.isoncd
+  local action = MGetAction(skillId)
+  return action.isoncd
 end
 
 function IsReady(skillId)
-  local action = MGetAction(skillId);
-  if action == nil then return false end
-  return action:IsReady()
+  local action = MGetAction(skillId)
+  return table.valid(action) and action:IsReady()
 end
 
 function ReadyCast(target, ...)
@@ -68,17 +81,6 @@ function GetNearbyEnemies(radius)
   return attackables
 end
 
-function GetACRTarget()
-  CachedTarget = Player:GetTarget()
-  return CachedTarget
-end
-
-function ClearCache()
-  CachedAction = {}
-  CachedBuff = nil
-  CachedTarget = nil
-end
-
 function LookupSkill(name)
   for actionId, action in pairs(ActionList:Get(1)) do
     if string.contains(string.lower(action.name), string.lower(name)) then
@@ -87,21 +89,47 @@ function LookupSkill(name)
   end
 end
 
-function ForceCast(skillId, targeted)
-  if targeted == nil then targeted = true end
-  local targetId = targeted and CachedTarget or Player.id
-  local action = ActionList:Get(1, skillId)
+function GetEnemiesNearTarget(target, range, radius)
+  range = range + radius
+	local el = EntityList("alive,attackable,onmesh,maxdistance=" .. range)
+  if table.valid(el) then
+    return FilterByProximity(el, target.pos, radius)
+  end
 
-  OpenACR_IsReady = false
-  AwaitDo(0, 1000, function()
-    return Player.lastcastid == skillId
-  end,
-  function()
-    if action:IsReady(targetId) then
-      action:Cast(targetId)
+  return nil
+end
+
+----------------------------------------------------------------------
+--
+-- Navigation
+--
+----------------------------------------------------------------------
+local ForceStop = false
+local CurrentNav = nil
+
+function ForceStopMovement()
+  d("force stopping movement")
+  ForceStop = true
+end
+
+function TeleportThenMove(unlock)
+  if not ActionIsReady(7,5) then return end
+
+  if Player.localmapid == unlock.map then
+    Player:MoveTo(unlock.pos.x, unlock.pos.y, unlock.pos.z)
+    return
+  end
+
+  ForceStop = false
+  Player:Teleport(unlock.node)
+  ml_global_information.AwaitThen(5000, 10000,
+    function()
+      return (not IsLoading() and Player.localmapid == unlock.map) or ForceStop
+    end,
+    function()
+      if ForceStop then return end
+      if Player.localmapid ~= unlock.map then return end
+      TeleportThenMove(unlock)
     end
-  end,
-  function()
-    OpenACR_IsReady = true
-  end)
+  )
 end
