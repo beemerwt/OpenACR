@@ -2,53 +2,6 @@ local Reaper = {
 
 }
 
-local Buffs = {
-  SoulReaver = 2587,
-  DeathsDesign = 2586,
-
-  EnhancedGibbet = 2588,
-  EnhancedGallows = 2589,
-
-  ImmortalSacrifice = -1,
-  SoulSow = -1
-}
-
-local Skills = {
-  Harpe = 24386,
-  Slice = 24373,
-  WaxingSlice = 24374,
-  InfernalSlice = 24375,
-  WhorlOfDeath = 24379,
-  ShadowOfDeath = 24378,
-  Gibbet = 24382,
-  Gallows = 24383,
-  Guillotine = 24384,
-  Enshroud = 24394,
-  BloodStalk = 24389,
-
-  SoulSlice = 24380,
-  SoulScythe = 24381,
-  UnveiledGibbet = 24390,
-  UnveiledGallows = 24391,
-  GrimSwathe = 24392,
-
-  SoulSow = 24387,
-
-  HarvestMoon = 24388,
-  ArcaneCircle = 24405,
-  PlentifulHarvest = 24385,
-
-  VoidReaping = 24395,
-  CrossReaping = 24396,
-  GrimReaping = 24397,
-  LemureSlice = 24399,
-  LemureScythe = 24400,
-  Communio = 24398,
-
-  SpinningScythe = 24376,
-  NightmareScythe = 24377,
-}
-
 local function BasicCombo(target)
   if Player.lastcomboid == Skills.Slice then
     if ReadyCast(target.id, Skills.WaxingSlice) then return true end

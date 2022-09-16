@@ -2,25 +2,6 @@ local Marauder = {
   AOE = true,
 }
 
-local Buffs = {
-  SurgingTempest = -1,
-  Defiance = 91,
-}
-
-local Skills = {
-  HeavySwing = 31,
-  Maim = 37,
-  Berserk = 38,
-  Overpower = 41,
-  Defiance = 48,
-  Tomahawk = 46,
-  StormsPath = 42,
-  ThrillOfBattle = 40,
-  Vengeance = 44,
-  Holmgang = 43,
-  StormsEye = 45,
-}
-
 function Marauder:Cast(target)
   local playerHasSurgingTempest = HasBuff(Player.id, Buffs.SurgingTempest, 0, 15)
   local playerHasDefiance = HasBuff(Player.id, Buffs.Defiance)

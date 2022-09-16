@@ -2,35 +2,6 @@ local Arcanist = {
   AOE = true,
 }
 
-local Skills = {
-  Aethercharge = 25800,
-  EnergyDrain = 16508,
-  Fester = 181,
-  Physick = 16230,
-  RadiantAegis = 25799,
-  LucidDreaming = 7562, -- Role skill
-
-  Carbuncle = 25798,
-  Ruby = 25802,
-  Topaz = 25803,
-  Emerald = 25804,
-
-  Gemshine = 25883,
-
-  Ruin = 163,
-  Ruin2 = 172,
-  RubyRuin = 25808,
-  TopazRuin = 25809,
-  TopazRuin2 = 25812,
-  EmeraldRuin = 25810,
-  EmeraldRuin2 = 25813,
-
-  Outburst = 16511,
-  RubyOutburst = 25814,
-  TopazOutburst = 25815,
-  EmeraldOutburst = 25816,
-}
-
 function Arcanist:Cast(target)
   local carbuncleTimeleft = Player.gauge[1]
   local transformTimeleft = Player.gauge[2]

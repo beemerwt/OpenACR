@@ -31,13 +31,13 @@ OpenACR = {
   -- All of the jobs implemented so far...
   profiles = {
     -- Base classes
-    [FFXIV.JOBS.GLADIATOR] = "Gladiator.lua",
-    [FFXIV.JOBS.MARAUDER] = "Marauder.lua",
+    [FFXIV.JOBS.GLADIATOR] = "base\\Gladiator.lua",
+    [FFXIV.JOBS.MARAUDER] = "base\\Marauder.lua",
 
-    [FFXIV.JOBS.PUGILIST] = "Pugilist.lua",
-    [FFXIV.JOBS.LANCER] = "Lancer.lua",
-    [FFXIV.JOBS.ROGUE] = "Rogue.lua",
-
+    [FFXIV.JOBS.PUGILIST] = "base\\Pugilist.lua",
+    [FFXIV.JOBS.LANCER] = "base\\Lancer.lua",
+    [FFXIV.JOBS.ROGUE] = "base\\Rogue.lua",
+    [FFXIV.JOBS.ARCANIST] = "base\\Arcanist.lua",
 
     -- Advanced Melee DPS
     [FFXIV.JOBS.MONK] = "Monk.lua",
@@ -49,7 +49,6 @@ OpenACR = {
     -- Advanced Ranged DPS
     [FFXIV.JOBS.DANCER] = "Dancer.lua",
 
-    [FFXIV.JOBS.ARCANIST] = "Arcanist.lua",
     [FFXIV.JOBS.BLUEMAGE] = "BlueMage.lua",
   },
 

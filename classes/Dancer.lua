@@ -3,20 +3,6 @@ local Dancer = {
   AutoPeloton = true,
 }
 
-local Buffs = {
-  ClosedPosition = 1823,
-  Peloton = 1199,
-  SilkenSymmetry = 2693, -- Reverse Cascade
-}
-
-local Skills = {
-  ClosedPosition = 16006,
-  Peloton = 7557,
-
-  Cascade = 15989,
-  ReverseCascade = -1
-}
-
 local function GetBestDancePartner()
   if PartyMembers == nil then return nil end
   -- Ninja → Reaper/Monk → Dragoon/Samurai → Black Mage/Red Mage → Summoner → Machinist → Bard → Dancer

@@ -1,23 +1,6 @@
 local Lancer = {
 }
 
-local Buffs = {
-  PowerSurge = 2720, -- Damage increase
-  LifeSurge = 116
-}
-
-local Skills = {
-  TrueThrust = 75,
-  VorpalThrust = 78, -- Combos with TrueThrust
-
-  LifeSurge = 83, -- First weapon skill afterwards is crit, increases damage when already under crit bonus, absorbs portion of damage as HP, can't be applied to DOT
-  PiercingTalon = 90, -- Ranged
-  Disembowel = 87,
-  FullThrust = 84, -- Follows Vorpal in combo
-  LanceCharge = 85,
-  ChaosThrust = 88, -- Cast after Disembowel, also applies DOT
-}
-
 function Lancer:Cast(target)
   local playerHasPowerSurge = HasBuff(Player.id, Buffs.PowerSurge, 0, 3)
   local playerHasLifeSurge = HasBuff(Player.id, Buffs.LifeSurge)

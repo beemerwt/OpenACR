@@ -1,38 +1,5 @@
 local Samurai = {
-
   AOEEnabled = true
-}
-
-local Skills = {
-  MeikyoShisui = 7499,
-  Gekko = 7481,
-  Kasha = 7482,
-  Shifu = 7479,
-  Shoha = 16487,
-  Enpi = 7486,
-  Hagakure = 7495,
-  Ikishoten = 16482,
-  Yukikaze = 7480,
-  Hakaze = 7477,
-  Higanbana = 7489,
-  TenkaGoken = 7488,
-
-  HissatsuSenei = 16481,
-  HissatsuShinten = 7490,
-  HissatsuGyoten = 7492,
-  HissatsuYaten = 7493,
-
-  MidareSetsugekka = 7487,
-  KaeshiSetsugekka = 16486,
-
-  OgiNamikiri = 25781,
-  KaeshiNamikiri = 25782,
-}
-
-local Buffs = {
-  Fuka = 1299, -- Cooldown Reduction
-  Fugetsu = 1298, -- Increase Damage
-  Higanbana = 1228, -- Damage over Time
 }
 
 local GCDFiller = {

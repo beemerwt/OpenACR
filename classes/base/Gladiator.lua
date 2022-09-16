@@ -2,23 +2,6 @@ local Gladiator = {
   AOE = true
 }
 
-local Buffs = {
-  IronWill = 79,
-}
-
-local Skills = {
-  FastBlade = 9,
-  RiotBlade = 15,
-  ShieldBash = 16,
-  Sentinel = 17,
-  FightOrFlight = 20,
-  RageOfHalone = 21,
-  CircleOfScorn = 23,
-  ShieldLob = 24,
-  IronWill = 28,
-  TotalEclipse = 7381
-}
-
 function Gladiator:Cast(target)
   if not HasBuff(Player.id, Buffs.IronWill) then
     if ReadyCast(Player.id, Skills.IronWill) then return true end
