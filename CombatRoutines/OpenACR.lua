@@ -76,8 +76,8 @@ local function log(...)
 end
 
 function OpenACR.Cast()
-  if not OpenACR.CurrentRole then return false end
-  if not OpenACR.CurrentProfile then return false end
+  if OpenACR.CurrentRole == nil then return false end
+  if OpenACR.CurrentProfile == nil then return false end
 
   local target = MGetTarget()
   if target == nil then return false end
@@ -124,12 +124,12 @@ function OpenACR.Draw()
     GUI:AlignFirstTextHeightToWidgets()
     GUI:Text("Current Role: " .. GetRoleString(Player.job))
     GUI:SameLine(140)
-    if GUI:Button("Reload") then OpenACR.ReloadRole() end
+    if OpenACR.RightButton("Reload") then OpenACR.ReloadRole() end
 
     GUI:AlignFirstTextHeightToWidgets()
     GUI:Text("Current Class: " .. ffxivminion.classes[Player.job])
     GUI:SameLine(140)
-    if GUI:Button("Reload##1") then OpenACR.ReloadProfile() end
+    if OpenACR.RightButton("Reload##1") then OpenACR.ReloadProfile() end
 
     if OpenACR.CurrentRole ~= nil then
       GUI:Separator()
@@ -232,6 +232,13 @@ function OpenACR.ListCheckboxItem(text, value, align_x)
   align_x = align_x == nil and 170 or align_x
   GUI:Text(text) GUI:SameLine(align_x)
   return GUI:Checkbox("##"..text, value)
+end
+
+function OpenACR.RightButton(text, value)
+  local x,_ = GUI:CalcTextSize(text)
+  local w,_= GUI:GetWindowSize()
+  local leftOfButton = w - 5 - x - 5
+  return GUI:Button(text, value)
 end
 
 -- Return the profile to ACR, so it can be read.
