@@ -52,7 +52,11 @@ end
 
 function IsOnCooldown(skillId)
   local action = MGetAction(skillId)
-  return action.isoncd
+  if table.valid(action) then
+    return action.isoncd
+  end
+
+  return true
 end
 
 function IsReady(skillId)
