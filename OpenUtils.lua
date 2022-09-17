@@ -80,9 +80,7 @@ function ReadyCast(target, ...)
 end
 
 function GetNearbyEnemies(radius)
-  local attackables = MEntityList("alive,attackable,maxdistance=" .. radius);
-  if not table.valid(attackables) then return {} end
-  return attackables
+  return GetEnemiesNearTarget(Player, 0, radius)
 end
 
 function LookupSkill(name)
@@ -95,12 +93,12 @@ end
 
 function GetEnemiesNearTarget(target, range, radius)
   range = range + radius
-	local el = EntityList("alive,attackable,onmesh,maxdistance=" .. range)
+	local el = EntityList("alive,attackable,onmesh,maxdistance=" .. tostring(range))
   if table.valid(el) then
     return FilterByProximity(el, target.pos, radius)
   end
 
-  return nil
+  return {}
 end
 
 ----------------------------------------------------------------------

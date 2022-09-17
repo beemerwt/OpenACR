@@ -8,13 +8,13 @@ Skills.RiddleOfWind = 7868 -- 9098, 25766
 Skills.Brotherhood = 7396 -- 18915
 Skills.RiddleOfFire = 7395 -- 9636
 Skills.FourPointFury = 16473
-Skills.RockBreaker = 70
+Skills.Rockbreaker = 70
 Skills.HowlingFist = 25763
 Skills.Mantra = 65
 Skills.MasterfulBlitz = 25674
 
 -- Buffs
-Buffs.LeadenFist = -1
+Buffs.LeadenFist = 1861
 Buffs.Demolish = 246
 Buffs.Brotherhood = -1
 Buffs.RiddleOfFire = -1
