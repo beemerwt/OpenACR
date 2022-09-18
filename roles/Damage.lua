@@ -23,6 +23,15 @@ function Damage:Defensives()
 end
 
 function Damage:Control(target)
+  local cinfo = target.castinginfo
+  if table.valid(cinfo) then
+    if cinfo.castinginterruptible then
+      if ReadyCast(target.id, Skills.LegSweep) then
+        return true
+      end
+    end
+  end
+
   return false
 end
 
