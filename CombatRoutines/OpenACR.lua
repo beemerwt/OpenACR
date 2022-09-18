@@ -8,6 +8,8 @@ OpenACR = {
     open = true,
   },
 
+  MonitoredSkills = {},
+
   classes = {
     [FFXIV.JOBS.GLADIATOR] = true,
     [FFXIV.JOBS.MARAUDER] = true,
@@ -147,6 +149,27 @@ function OpenACR.Draw()
   GUI:End()
 end
 
+local function Monitor(skill)
+  local action = ActionList:Get(1, skill.id)
+
+  local isPlayerReady = action:IsReady(Player.id)
+  if skill.wasPlayerReady ~= isPlayerReady then
+    d("IsReady for Player on " .. action.name .. " changed to " .. tostring(isPlayerReady) .. " after " .. tostring(Player.castinginfo.lastcastid))
+    skill.wasPlayerReady = isPlayerReady
+  end
+
+  local target = Player:GetTarget()
+  if target ~= nil then
+    local isTargetReady = action:IsReady(target.id)
+    if skill.wasTargetReady ~= isTargetReady then
+      d("IsReady for Target on " .. action.name .. " changed to " .. tostring(isTargetReady) .. " after " .. tostring(Player.castinginfo.lastcastid))
+      skill.wasTargetReady = isTargetReady
+    end
+  end
+
+  return skill
+end
+
 function OpenACR.OnUpdate(event, tickcount)
   OpenACR.IsPvP = IsPVPMap(Player.localmapid)
 
@@ -161,12 +184,23 @@ function OpenACR.OnUpdate(event, tickcount)
   if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Update then
     OpenACR.CurrentProfile:Update()
   end
+
+  for i,_ in ipairs(OpenACR.MonitoredSkills) do
+    OpenACR.MonitoredSkills[i] = Monitor(OpenACR.MonitoredSkills[i])
+  end
 end
 
 function OpenACR.OnLoad()
   OpenACR.ReloadRole()
   OpenACR.ReloadProfile()
   OpenACR.LoadSettings()
+end
+
+function OpenACR.MonitorSkill(skillId)
+  if not table.contains(OpenACR.MonitoredSkills, skillId) then
+    d("Monitoring " .. tostring(skillId))
+    table.insert(OpenACR.MonitoredSkills, { id = skillId })
+  end
 end
 
 -- Just reloads the profile file for player's current job
