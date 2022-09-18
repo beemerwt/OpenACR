@@ -93,9 +93,10 @@ end
 
 function GetEnemiesNearTarget(target, range, radius)
   range = range + radius
-	local el = EntityList("alive,attackable,onmesh,maxdistance=" .. tostring(range))
+	local el = EntityList("alive,attackable,maxdistance=" .. tostring(range))
   if table.valid(el) then
-    return FilterByProximity(el, target.pos, radius)
+    local proximity = FilterByProximity(el, target.pos, radius)
+    if table.valid(proximity) then return proximity end
   end
 
   return {}
