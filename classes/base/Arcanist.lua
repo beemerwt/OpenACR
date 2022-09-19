@@ -1,8 +1,75 @@
-local Arcanist = {
-  AOE = true,
-}
+local Arcanist = inheritsFrom(DefaultProfile)
+Arcanist.AOE = true
+Arcanist.HealerPriority = false
+Arcanist.Damage = true
+
+function Arcanist:OnLoad()
+  self.AOE = ACR.GetSetting("OpenACR_Arcanist_AOEEnabled", true)
+  self.HealerPriority = ACR.GetSetting("OpenACR_Arcanist_HealerPriority", false)
+  self.Damage = ACR.GetSetting("OpenACR_Arcanist_Damage", true)
+end
+
+function Arcanist:Update()
+  -- TODO: THIS
+  --if MIsCasting() and Player:GetTarget() == nil and then
+    --ActionList:StopCasting()
+  --end
+end
+
+local lastTime = 0
+local elapsed = 0
+function Arcanist:Buff()
+  -- Pet disappears between transformations
+  -- We keep track of time elapsed since we last saw them
+  -- if it was more than 10s then we resummon them.
+  if Player.pet == nil then
+    elapsed = elapsed + TimeSince(lastTime)
+
+    if elapsed > 10000 then
+      if ReadyCast(Player.id, Skills.Carbuncle) then return true end
+    end
+  else
+    elapsed = 0
+  end
+
+  lastTime = Now()
+  return false
+end
+
+Skills.Resurrection = 16928 -- 173, 25639,
+
+function Arcanist:BeforeCast()
+  if self.HealerPriority then
+    local bestHeal = GetBestPartyHealTarget(nil, 30, 85)
+    if bestHeal ~= nil and not Player:IsMoving() then
+      if ReadyCast(bestHeal.id, Skills.Physick) then return true end
+    end
+  end
+
+  local deadPlayers = MEntityList("dead,myparty,targetable,maxdistance=30")
+  if table.valid(deadPlayers) then
+    -- Do a swiftcast before resurrection (important)
+    ReadyCast(Player.id, Skills.Swiftcast)
+
+    for _, v in pairs(deadPlayers) do
+      if ReadyCast(v.id, Skills.Resurrection) then return true end
+    end
+  end
+
+  -- Protect self from dying with Radiant Aegis
+  if Player.hp.percent < 50 then
+    if ReadyCast(Player.id, Skills.RadiantAegis) then return true end
+  end
+
+  if Player.mp.percent < 50 then
+    if ReadyCast(Player.id, Skills.LucidDreaming) then return true end
+  end
+
+  return false
+end
 
 function Arcanist:Cast(target)
+  if not self.Damage then return false end
   local carbuncleTimeleft = Player.gauge[1]
   local transformTimeleft = Player.gauge[2]
 
@@ -13,21 +80,6 @@ function Arcanist:Cast(target)
   local rubyReady = Player.gauge[5] == 1 and gemCharges == 0
   local topazReady = Player.gauge[6] == 1 and gemCharges == 0
   local emeraldReady = Player.gauge[7] == 1 and gemCharges == 0
-
-  if Player.pet == nil then
-    if ReadyCast(Player.id, Skills.Carbuncle) then return true end
-  end
-
-  if Player.hp.percent < 50 then
-    if ReadyCast(Player.id, Skills.RadiantAegis) then return true end
-    if not Player:IsMoving() then
-      if ReadyCast(Player.id, Skills.Physick) then return true end
-    end
-  end
-
-  if Player.mp.percent < 50 then
-    if ReadyCast(Player.id, Skills.LucidDreaming) then return true end
-  end
 
   local nearby = GetNearbyEnemies(10)
 
@@ -66,18 +118,9 @@ function Arcanist:Cast(target)
 end
 
 function Arcanist:Draw()
-  self.AOE = GUI:Checkbox("AOE Enabled", self.AOE)
-end
-
-function Arcanist:OnLoad()
-  self.AOE = ACR.GetSetting("OpenACR_Arcanist_AOEEnabled", true)
-end
-
-function Arcanist:Update()
-  -- TODO: THIS
-  --if MIsCasting() and Player:GetTarget() == nil and then
-    --ActionList:StopCasting()
-  --end
+  self.AOE = OpenACR.ListCheckboxItem("AOE Enabled", self.AOE)
+  self.HealerPriority = OpenACR.ListCheckboxItem("Healer Priority", self.HealerPriority)
+  self.Damage = OpenACR.ListCheckboxItem("Damage", self.Damage)
 end
 
 return Arcanist
