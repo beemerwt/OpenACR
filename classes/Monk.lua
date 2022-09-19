@@ -91,7 +91,12 @@ function Monk:Cast(target)
   if HasBuff(Player.id, Buffs.PerfectBalance) then
     if #pbCombo > 0 then
       d("Successfully entered the PBCombo handler.")
-      if ReadyCast(target.id, pbCombo[1]) then
+      local targetId = pbCombo[1] == Skills.Rockbreaker and Player.id
+        or pbCombo[1] == Skills.ArmOfTheDestroyer and Player.id
+        or pbCombo[1] == Skills.FourPointFury and Player.id
+        or target.id
+
+      if ReadyCast(targetId, pbCombo[1]) then
         table.remove(pbCombo, 1)
         return true
       end
@@ -181,22 +186,27 @@ function Monk:Cast(target)
       if ReadyCast(Player.id, Skills.PerfectBalance) then
         d("Perfect Balance Was Cast")
         if not HasLunar() then
-          if HasBuff(Player.id, Buffs.LeadenFist) then
-            pbCombo = { Skills.Bootshine, Skills.DragonKick, Skills.Bootshine }
-          else
+          if self.AOE and #nearby > 2 then
+            pbCombo = { Skills.Rockbreaker, Skills.Rockbreaker, Skills.Rockbreaker }
+          elseif not HasBuff(Player.id, Buffs.LeadenFist) then
             pbCombo = { Skills.DragonKick, Skills.Bootshine, Skills.DragonKick }
+          else
+            pbCombo = { Skills.Bootshine, Skills.DragonKick, Skills.Bootshine }
           end
 
-          d("PBCombo set to lunar")
           return true
         end
 
         if not HasSolar() then
-          local first = HasBuff(Player.id, Buffs.LeadenFist) and Skills.Bootshine or Skills.DragonKick
-          local second = HasBuff(Player.id, Buffs.DisciplinedFist) and Skills.TrueStrike or Skills.TwinSnakes
-          local third = HasBuff(target.id, Buffs.Demolish) and Skills.SnapPunch or Skills.Demolish
-          pbCombo = { first, second, third }
-          d("PBCombo set to solar")
+          if self.AOE and #nearby > 2 then
+            pbCombo = { Skills.ArmOfTheDestroyer, Skills.FourPointFury, Skills.Rockbreaker }
+          else
+            local first = HasBuff(Player.id, Buffs.LeadenFist) and Skills.Bootshine or Skills.DragonKick
+            local second = HasBuff(Player.id, Buffs.DisciplinedFist) and Skills.TrueStrike or Skills.TwinSnakes
+            local third = HasBuff(target.id, Buffs.Demolish) and Skills.SnapPunch or Skills.Demolish
+            pbCombo = { first, second, third }
+          end
+
           return true
         end
 
