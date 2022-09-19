@@ -58,6 +58,22 @@ OpenACR = {
   CurrentProfile = nil,
 }
 
+DefaultProfile = {
+  IsPvPCapable = function(self) return false end,
+
+  OnLoad = function(self) end,
+  Update = function(self) end,
+
+  Buff = function(self) return false end,
+  BeforeCast = function(self) return false end,
+  Cast = function(self, target) return false end,
+  PvPCast = function(self, target) return false end,
+
+  DrawHeader = function(self) end,
+  Draw = function(self) end,
+  DrawFooter = function(self) end,
+}
+
 OpenACR.RolePath = OpenACR.MainPath .. [[\roles\]]
 OpenACR.ClassPath = OpenACR.MainPath .. [[\classes\]]
 
@@ -81,19 +97,18 @@ function OpenACR.Cast()
   if OpenACR.CurrentRole == nil then return false end
   if OpenACR.CurrentProfile == nil then return false end
 
+  if OpenACR.CurrentProfile:Buff() then return true end
+  if OpenACR.CurrentProfile:BeforeCast() then return true end
+
   local target = MGetTarget()
   if target == nil then return false end
 
-  if OpenACR.IsPvP and OpenACR.CurrentProfile.PvPCapable then
-    if OpenACR.CurrentProfile.PvPCast then
-      if OpenACR.CurrentProfile:PvPCast(target) then return true end
-    end
+  if OpenACR.IsPvP and OpenACR.CurrentProfile:IsPvPCapable() then
+    if OpenACR.CurrentProfile:PvPCast(target) then return true end
   else
     if not target.attackable then return false end
     if OpenACR.CurrentRole:Cast(target) then return true end
-    if OpenACR.CurrentProfile.Cast then
-      if OpenACR.CurrentProfile:Cast(target) then return true end
-    end
+    if OpenACR.CurrentProfile:Cast(target) then return true end
   end
 end
 
@@ -104,16 +119,12 @@ end
 
 -- Adds a customizable header to the top of the ffxivminion task window.
 function OpenACR.DrawHeader()
-  if OpenACR.CurrentProfile and OpenACR.CurrentProfile.DrawHeader then
-    OpenACR.CurrentProfile:DrawHeader()
-  end
+  OpenACR.CurrentProfile:DrawHeader()
 end
 
 -- Adds a customizable footer to the top of the ffxivminion task window.
 function OpenACR.DrawFooter()
-  if OpenACR.CurrentProfile and OpenACR.CurrentProfile.DrawFooter then
-    OpenACR.CurrentProfile:DrawFooter()
-  end
+  OpenACR.CurrentProfile:DrawFooter()
 end
 
 function OpenACR.Draw()
@@ -171,6 +182,7 @@ local function Monitor(skill)
 end
 
 function OpenACR.OnUpdate(event, tickcount)
+  if not OpenACR.CurrentProfile then return end
   OpenACR.IsPvP = IsPVPMap(Player.localmapid)
 
   if OpenACR.BotRunning then
@@ -181,9 +193,7 @@ function OpenACR.OnUpdate(event, tickcount)
     end
   end
 
-  if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Update then
-    OpenACR.CurrentProfile:Update()
-  end
+  OpenACR.CurrentProfile:Update()
 
   for i,_ in ipairs(OpenACR.MonitoredSkills) do
     OpenACR.MonitoredSkills[i] = Monitor(OpenACR.MonitoredSkills[i])
@@ -215,9 +225,7 @@ function OpenACR.ReloadProfile()
   local profile, errorMessage = loadfile(OpenACR.ClassPath .. OpenACR.profiles[jobId], "t")
   if profile then
     OpenACR.CurrentProfile = profile()
-    if OpenACR.CurrentProfile and OpenACR.CurrentProfile.OnLoad then
-      OpenACR.CurrentProfile:OnLoad()
-    end
+    OpenACR.CurrentProfile:OnLoad()
   else
     log('An error occurred while loading ' .. ffxivminion.classes[jobId] .. ' profile...')
     log(errorMessage)

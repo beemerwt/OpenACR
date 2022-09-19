@@ -1,6 +1,5 @@
-local Monk = {
-  AOE = true,
-}
+local Monk = inheritsFrom(DefaultProfile)
+Monk.AOE = true
 
 -- Skills
 Skills.ForbiddenChakra = 8790
