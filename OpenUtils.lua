@@ -9,6 +9,23 @@ OpenACR_IsReady = true
 local AwaitThen = ml_global_information.AwaitThen
 local AwaitDo = ml_global_information.AwaitDo
 
+function abstractFrom(t, ...)
+  local abstract = table.shallowcopy(t)
+  for k, v in pairs(arg) do
+    if k ~= "n" then
+      if type(v) == "table" then
+        for x, y in pairs(v) do
+          abstract[x] = y
+        end
+      else
+        abstract[k] = v
+      end
+    end
+  end
+
+  return abstract
+end
+
 function LookupDuty(name)
   local dutyList = Duty:GetDutyList()
   if not dutyList then
@@ -35,7 +52,7 @@ function MGetAction(skillId)
     return memoized
   else
     local action = ActionList:Get(1, skillId)
-    SetMemoized(memString, skillId)
+    SetMemoized(memString, action)
     return action
   end
 end
@@ -64,29 +81,81 @@ function IsReady(skillId)
   return table.valid(action) and action:IsReady()
 end
 
-function ReadyCast(target, ...)
-  for _,skillId in ipairs(arg) do
+--- Gets the flattened version of all tables within a table
+function table.combine(t, ...)
+  local tArgs = { ... }
+
+  for i = 1,#tArgs do
+    table.insert(t, tArgs[i])
+  end
+
+  local hadTable = false
+  for i = 1,#t do
+    if type(t[i]) == "table" then
+      hadTable = true
+      for k, v in pairs(t[i]) do
+        table.insert(t, v)
+      end
+      table.remove(t, i)
+    end
+  end
+
+  if not hadTable then return t end
+  return table.combine(t)
+end
+
+-- arg = {...} | arg(tbl, num) = { {tbl}, num }
+-- want to unpack tbl
+
+function ReadyCast(targetId, ...)
+  local tArgs = {...}
+  local wasCast = false
+  local t = table.combine({}, tArgs)
+
+  for _,skillId in ipairs(t) do
     local action = MGetAction(skillId)
     if table.valid(action) then
-      if action:IsReady(target) then
-        if action:Cast(target) then
-          return true
+      if action:IsReady(targetId) then
+        if action:Cast(targetId) then
+          wasCast = true
+        else
+          local tarStr = targetId == Player.id and "self" or tostring(targetId)
+          d(tostring(skillId) .. " was not casted, despite being ready on " .. tarStr)
         end
       end
     end
   end
 
-  return false
+  return wasCast
 end
 
 function GetNearbyEnemies(radius)
   return GetEnemiesNearTarget(Player, 0, radius)
 end
 
-function LookupSkill(name)
+function GetNearbyHeals(radius)
+  local el = EntityList("alive,friendly,maxdistance=" .. tostring(radius))
+  if table.valid(el) then
+    return el
+  end
+
+  return {}
+end
+
+-- Looks up a skill by name and if they have a level requirement
+---@param name string
+---@param levelIsReq boolean
+function LookupSkill(name, levelIsReq, jobIsReq)
+  if levelIsReq == nil then levelIsReq = true end
+  if jobIsReq == nil then jobIsReq = true end
+
   for actionId, action in pairs(ActionList:Get(1)) do
     if string.contains(string.lower(action.name), string.lower(name)) then
-      d(action.name .. ': ' .. tostring(actionId))
+      if not levelIsReq or (levelIsReq and action.level > 0) then
+        if not jobIsReq or (jobIsReq and action.job == Player.job) then
+          d("[" .. ffxivminion.classes[Player.job] .. "] " .. action.name .. ': ' .. tostring(actionId))
+        end
+      end
     end
   end
 end
