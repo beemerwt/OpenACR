@@ -1,19 +1,4 @@
-local Ninja = {
-  PvPCapable = true,
-
-  ComboEnabled       = true,
-  NinkiEnabled       = true,
-  NinjutsuEnabled    = true,
-  AOEEnabled         = true,
-  RaijuEnabled       = true,
-  TCJEnabled         = true,
-  MeisuiEnabled      = true,
-  AssassinateEnabled = true,
-  TAEnabled          = true,
-  ThrowingEnabled    = true,
-  ACEnabled          = true
-}
-
+local Ninja = abstractFrom(OpenACR.CombatProfile)
 local TargetHasTrickAttack = false
 local TargetHasMug = false
 
@@ -313,17 +298,17 @@ end
 -- The Draw() function provides a place where a developer can show custom options.
 function Ninja:Draw()
   GUI:BeginChild("Class##SkillWindow", 0.0, 0.0, true)
-  self.AOEEnabled = OpenACR.ListCheckboxItem("AOE Enabled", self.AOEEnabled, 145)
-  self.ComboEnabled = OpenACR.ListCheckboxItem("Combo Enabled", self.ComboEnabled, 145)
-  self.NinkiEnabled = OpenACR.ListCheckboxItem("Ninki Enabled", self.NinkiEnabled, 145)
-  self.NinjutsuEnabled = OpenACR.ListCheckboxItem("Ninjutsu Enabled", self.NinjutsuEnabled, 145)
-  self.RaijuEnabled = OpenACR.ListCheckboxItem("Raiju Enabled", self.RaijuEnabled, 145)
-  self.TCJEnabled = OpenACR.ListCheckboxItem("Ten Chi Jin", self.TCJEnabled, 145)
-  self.ACEnabled = OpenACR.ListCheckboxItem("Armor Crush", self.ACEnabled, 145)
-  self.ThrowingEnabled = OpenACR.ListCheckboxItem("Throwing Dagger", self.ThrowingEnabled, 145)
-  self.AssassinateEnabled = OpenACR.ListCheckboxItem("Assassinate", self.AssassinateEnabled, 145)
-  self.MeisuiEnabled = OpenACR.ListCheckboxItem("Meisui", self.MeisuiEnabled, 145)
-  self.TAEnabled = OpenACR.ListCheckboxItem("Trick Attack", self.TAEnabled, 145)
+  self.AOEEnabled = OpenACR.ListCheckboxItem("AOE Enabled", self.AOEEnabled, 160)
+  self.ComboEnabled = OpenACR.ListCheckboxItem("Combo Enabled", self.ComboEnabled, 160)
+  self.NinkiEnabled = OpenACR.ListCheckboxItem("Ninki Enabled", self.NinkiEnabled, 160)
+  self.NinjutsuEnabled = OpenACR.ListCheckboxItem("Ninjutsu Enabled", self.NinjutsuEnabled, 160)
+  self.RaijuEnabled = OpenACR.ListCheckboxItem("Raiju Enabled", self.RaijuEnabled, 160)
+  self.TCJEnabled = OpenACR.ListCheckboxItem("Ten Chi Jin", self.TCJEnabled, 160)
+  self.ACEnabled = OpenACR.ListCheckboxItem("Armor Crush", self.ACEnabled, 160)
+  self.ThrowingEnabled = OpenACR.ListCheckboxItem("Throwing Dagger", self.ThrowingEnabled, 160)
+  self.AssassinateEnabled = OpenACR.ListCheckboxItem("Assassinate", self.AssassinateEnabled, 160)
+  self.MeisuiEnabled = OpenACR.ListCheckboxItem("Meisui", self.MeisuiEnabled, 160)
+  self.TAEnabled = OpenACR.ListCheckboxItem("Trick Attack", self.TAEnabled, 160)
   GUI:EndChild()
 end
 

@@ -25,7 +25,7 @@ function Arcanist:Buff()
   if Player.pet == nil then
     elapsed = elapsed + TimeSince(lastTime)
 
-    if elapsed > 10000 then
+    if elapsed > 10000 and not Player:IsMoving() then
       if ReadyCast(Player.id, Skills.Carbuncle) then return true end
     end
   else

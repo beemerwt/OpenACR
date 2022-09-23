@@ -19,6 +19,8 @@ OpenACR = {
     [FFXIV.JOBS.PUGILIST] = true,
     [FFXIV.JOBS.LANCER] = true,
 
+    [FFXIV.JOBS.SCHOLAR] = true,
+
     [FFXIV.JOBS.MONK] = true,
     [FFXIV.JOBS.DRAGOON] = true,
     [FFXIV.JOBS.NINJA] = true,
@@ -28,6 +30,8 @@ OpenACR = {
     [FFXIV.JOBS.DANCER] = true,
     [FFXIV.JOBS.ARCANIST] = true,
     [FFXIV.JOBS.BLUEMAGE] = true,
+
+    [FFXIV.JOBS.LEATHERWORKER] = true
   },
 
   -- All of the jobs implemented so far...
@@ -42,37 +46,46 @@ OpenACR = {
     [FFXIV.JOBS.ARCANIST] = "base\\Arcanist.lua",
 
     -- Advanced Melee DPS
-    [FFXIV.JOBS.MONK] = "Monk.lua",
-    [FFXIV.JOBS.DRAGOON] = "Dragoon.lua",
-    [FFXIV.JOBS.NINJA] = "Ninja.lua",
-    [FFXIV.JOBS.SAMURAI] = "Samurai.lua",
-    [FFXIV.JOBS.REAPER] = "Reaper.lua",
+    [FFXIV.JOBS.MONK] = "damage\\Monk.lua",
+    [FFXIV.JOBS.DRAGOON] = "damage\\Dragoon.lua",
+    [FFXIV.JOBS.NINJA] = "damage\\Ninja.lua",
+    [FFXIV.JOBS.SAMURAI] = "damage\\Samurai.lua",
+    [FFXIV.JOBS.REAPER] = "damage\\Reaper.lua",
+
+    [FFXIV.JOBS.SCHOLAR] = "healer\\Scholar.lua",
 
     -- Advanced Ranged DPS
-    [FFXIV.JOBS.DANCER] = "Dancer.lua",
+    [FFXIV.JOBS.DANCER] = "damage\\Dancer.lua",
 
-    [FFXIV.JOBS.BLUEMAGE] = "BlueMage.lua",
+    [FFXIV.JOBS.BLUEMAGE] = "damage\\BlueMage.lua",
+
+    [FFXIV.JOBS.LEATHERWORKER] = "crafter\\basic.lua"
   },
 
   CurrentRole = nil,
   CurrentProfile = nil,
 }
 
-DefaultProfile = {
-  IsPvPCapable = function(self) return false end,
-
+OpenACR.DefaultProfile = {
   OnLoad = function(self) end,
   Update = function(self) end,
-
-  Buff = function(self) return false end,
-  BeforeCast = function(self) return false end,
-  Cast = function(self, target) return false end,
-  PvPCast = function(self, target) return false end,
 
   DrawHeader = function(self) end,
   Draw = function(self) end,
   DrawFooter = function(self) end,
 }
+
+OpenACR.CombatProfile = abstractFrom(OpenACR.DefaultProfile, {
+  IsPvPCapable = function(self) return false end,
+  Buff = function(self) return false end,
+  BeforeCast = function(self) return false end,
+  Cast = function(self, target) return false end,
+  PvPCast = function(self, target) return false end,
+})
+
+OpenACR.CraftingProfile = abstractFrom(OpenACR.DefaultProfile, {
+  Perform = function(self) return false end
+})
 
 OpenACR.RolePath = OpenACR.MainPath .. [[\roles\]]
 OpenACR.ClassPath = OpenACR.MainPath .. [[\classes\]]
@@ -93,10 +106,12 @@ local function log(...)
   d(str)
 end
 
-function OpenACR.Cast()
-  if OpenACR.CurrentRole == nil then return false end
-  if OpenACR.CurrentProfile == nil then return false end
+function OpenACR.Craft()
+  return OpenACR.CurrentProfile:Perform()
+end
 
+function OpenACR.Combat()
+  if OpenACR.CurrentRole == nil then return false end
   if OpenACR.CurrentProfile:Buff() then return true end
   if OpenACR.CurrentProfile:BeforeCast() then return true end
 
@@ -104,11 +119,21 @@ function OpenACR.Cast()
   if target == nil then return false end
 
   if OpenACR.IsPvP and OpenACR.CurrentProfile:IsPvPCapable() then
-    if OpenACR.CurrentProfile:PvPCast(target) then return true end
+    return OpenACR.CurrentProfile:PvPCast(target)
+  end
+
+  if OpenACR.CurrentRole:Cast(target) then return true end
+  return OpenACR.CurrentProfile:Cast(target)
+end
+
+function OpenACR.Cast()
+  if not Player.alive then return false end
+  if OpenACR.CurrentProfile == nil then return false end
+
+  if IsCrafter(Player.job) then
+    return OpenACR.Craft()
   else
-    if not target.attackable then return false end
-    if OpenACR.CurrentRole:Cast(target) then return true end
-    if OpenACR.CurrentProfile:Cast(target) then return true end
+    return OpenACR.Combat()
   end
 end
 
@@ -130,7 +155,7 @@ end
 function OpenACR.Draw()
   if not OpenACR.GUI.open then return end
 
-  GUI:SetNextWindowSize(195, 270)
+  GUI:SetNextWindowSize(210, 270)
   OpenACR.GUI.visible, OpenACR.GUI.open = GUI:Begin(OpenACR.GUI.name, OpenACR.GUI.open, GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse)
 
   if OpenACR.GUI.visible then
@@ -144,13 +169,13 @@ function OpenACR.Draw()
     GUI:SameLine(140)
     if OpenACR.RightButton("Reload##1") then OpenACR.ReloadProfile() end
 
-    if OpenACR.CurrentRole ~= nil then
+    if OpenACR.CurrentRole then
       GUI:Separator()
       GUI:Text("Role")
       OpenACR.CurrentRole:Draw()
     end
 
-    if OpenACR.CurrentProfile and OpenACR.CurrentProfile.Draw then
+    if OpenACR.CurrentProfile then
       GUI:Separator()
       GUI:Text("Class")
       OpenACR.CurrentProfile:Draw()
@@ -237,16 +262,19 @@ function OpenACR.ReloadRole()
   local rolefile = rolestr == "DPS" and "Damage.lua"
     or rolestr == "Healer" and "Healer.lua"
     or rolestr == "Tank" and "Tank.lua"
+    or nil
 
-  local role, roleError = loadfile(OpenACR.RolePath .. rolefile, "t")
-  if role then
-    OpenACR.CurrentRole = role()
-    if OpenACR.CurrentRole then
-      OpenACR.CurrentRole:OnLoad()
+  if rolefile then
+    local role, roleError = loadfile(OpenACR.RolePath .. rolefile, "t")
+    if role then
+      OpenACR.CurrentRole = role()
+      if OpenACR.CurrentRole then
+        OpenACR.CurrentRole:OnLoad()
+      end
+    else
+      log('An error occurred while loading ' .. rolestr .. ' role...')
+      log(roleError)
     end
-  else
-    log('An error occurred while loading ' .. rolestr .. ' role...')
-    log(roleError)
   end
 end
 
@@ -271,7 +299,7 @@ end
 
 function OpenACR.ListCheckboxItem(text, value, align_x)
   GUI:AlignFirstTextHeightToWidgets()
-  align_x = align_x == nil and 170 or align_x
+  align_x = align_x == nil and 185 or align_x
   GUI:Text(text) GUI:SameLine(align_x)
   return GUI:Checkbox("##"..text, value)
 end
