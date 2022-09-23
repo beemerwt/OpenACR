@@ -1,6 +1,4 @@
-local Samurai = {
-  AOEEnabled = true
-}
+local Samurai = abstractFrom(OpenACR.CombatProfile)
 
 local GCDFiller = {
   [1] = {
@@ -129,7 +127,7 @@ local function BasicCombo(target)
   end
 
   -- Perform start of combo
-  if Samurai.AOEEnabled and #nearby > 2 and (not ka and not getsu) then
+  if Samurai.AOE and #nearby > 2 and (not ka and not getsu) then
     if ReadyCast(target.id, Skills.Fuga) then return true end
   else
     if ReadyCast(target.id, Skills.Hakaze) then return true end
@@ -164,12 +162,12 @@ function Samurai:Cast(target)
 end
 
 function Samurai:Draw()
-  self.AOEEnabled = GUI:Checkbox("AOE Enabled", self.AOEEnabled)
+  self.AOE = GUI:Checkbox("AOE Enabled", self.AOE)
 
 end
 
 function Samurai:OnLoad()
-  self.AOEEnabled = ACR.GetSetting("OpenACR_Samurai_AOEEnabled", true)
+  self.AOE = ACR.GetSetting("OpenACR_Samurai_AOEEnabled", true)
 end
 
 return Samurai

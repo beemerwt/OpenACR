@@ -1,4 +1,4 @@
-local Monk = inheritsFrom(DefaultProfile)
+local Monk = abstractFrom(OpenACR.CombatProfile)
 Monk.AOE = true
 
 -- Skills

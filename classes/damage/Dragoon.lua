@@ -1,5 +1,4 @@
-local Dragoon = {
-}
+local Dragoon = abstractFrom(OpenACR.CombatProfile)
 
 function Dragoon:Cast(target)
 end

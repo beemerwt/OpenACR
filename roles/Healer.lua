@@ -1,7 +1,4 @@
-local Healer = {
-  DefensivesEnabled = true,
-  ControlEnabled = true
-}
+local Healer = abstractFrom(OpenACR.CombatProfile)
 
 function Healer:Defensives()
   return false
@@ -29,14 +26,13 @@ function Healer:Cast(target)
 end
 
 function Healer:Draw()
-  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled, 170)
-  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled, 170)
+  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled)
+  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled)
 end
 
 function Healer:OnLoad()
   self.DefensivesEnabled = ACR.GetSetting("OpenACR_Healer_Defensives", true)
   self.ControlEnabled = ACR.GetSetting("OpenACR_Healer_Control", true)
 end
-
 
 return Healer

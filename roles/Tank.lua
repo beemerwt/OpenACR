@@ -1,8 +1,4 @@
-local Tank = {
-  DefensivesEnabled = true,
-  ControlEnabled = false,
-  ProvokeEnabled = true,
-}
+local Tank = abstractFrom(OpenACR.CombatProfile)
 
 local Skills = {
   -- Defensives
@@ -79,9 +75,9 @@ function Tank:Cast(target)
 end
 
 function Tank:Draw()
-  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled, 170)
-  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled, 170)
-  self.ProvokeEnabled = OpenACR.ListCheckboxItem("Provoke", self.ProvokeEnabled, 170)
+  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled)
+  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled)
+  self.ProvokeEnabled = OpenACR.ListCheckboxItem("Provoke", self.ProvokeEnabled)
 end
 
 function Tank:OnLoad()

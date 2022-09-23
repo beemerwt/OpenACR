@@ -1,14 +1,9 @@
-local Damage = {
-  DefensivesEnabled = true,
-  ControlEnabled = false,
-  TrueNorthEnabled = true
-}
+local Damage = abstractFrom(OpenACR.CombatProfile)
 
-local Skills = {
-  Bloodbath = 7542, -- No GCD
-  SecondWind = 7541,
-  TrueNorth = 7546,
-}
+Skills.Bloodbath = 7542 -- No GCD
+Skills.SecondWind = 7541
+Skills.TrueNorth = 7546
+Skills.LegSweep = 82
 
 function Damage:Defensives()
   if Player.hp.percent < 35 then
@@ -68,9 +63,9 @@ function Damage:Cast(target)
 end
 
 function Damage:Draw()
-  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled, 170)
-  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled, 170)
-  self.TrueNorthEnabled = OpenACR.ListCheckboxItem("True North", self.TrueNorthEnabled, 170)
+  self.DefensivesEnabled = OpenACR.ListCheckboxItem("Defensives Enabled", self.DefensivesEnabled)
+  self.ControlEnabled = OpenACR.ListCheckboxItem("Control Enabled", self.ControlEnabled)
+  self.TrueNorthEnabled = OpenACR.ListCheckboxItem("True North", self.TrueNorthEnabled)
 end
 
 function Damage:OnLoad()

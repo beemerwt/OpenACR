@@ -1,7 +1,4 @@
-local Dancer = {
-  AutoPartner = true,
-  AutoPeloton = true,
-}
+local Dancer = abstractFrom(OpenACR.CombatProfile)
 
 local function GetBestDancePartner()
   if PartyMembers == nil then return nil end

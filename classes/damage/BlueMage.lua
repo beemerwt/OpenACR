@@ -1,9 +1,4 @@
-local BlueMage = {
-  AOE = true,
-  ShowRed = true,
-  ShowYellow = true,
-  isNavigating = false,
-}
+local BlueMage = abstractFrom(OpenACR.CombatProfile)
 
 local function StopNav()
   if MIsCasting(true) then ActionList:StopCasting() end

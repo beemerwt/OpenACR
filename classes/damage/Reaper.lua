@@ -1,6 +1,4 @@
-local Reaper = {
-
-}
+local Reaper = abstractFrom(OpenACR.CombatProfile)
 
 local function BasicCombo(target)
   if Player.lastcomboid == Skills.Slice then
