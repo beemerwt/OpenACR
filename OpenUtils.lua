@@ -26,6 +26,22 @@ function abstractFrom(t, ...)
   return abstract
 end
 
+function DistanceToTarget(target)
+  if target and target.pos and target.pos.x and target.pos.y and target.pos.z then
+    return math.distance3d(Player.pos.x, Player.pos.y, Player.pos.z, target.pos.x, target.pos.y, target.pos.z)
+  end
+
+  return -1
+end
+
+function DistanceToTarget2D(target)
+  if target.pos and target.pos.x and target.pos.z then
+    return math.distance2d(Player.pos.x, Player.pos.z, target.pos.x, target.pos.z)
+  end
+
+  return -1
+end
+
 function LookupDuty(name)
   local dutyList = Duty:GetDutyList()
   if not dutyList then
@@ -161,7 +177,7 @@ function LookupSkill(name, levelIsReq, jobIsReq)
 end
 
 function GetEnemiesNearTarget(target, range, radius)
-  range = range + radius
+  range = range + (radius or 0)
 	local el = EntityList("alive,attackable,maxdistance=" .. tostring(range))
   if table.valid(el) then
     local proximity = FilterByProximity(el, target.pos, radius)
