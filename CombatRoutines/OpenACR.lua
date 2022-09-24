@@ -77,10 +77,8 @@ OpenACR.DefaultProfile = {
 
 OpenACR.CombatProfile = abstractFrom(OpenACR.DefaultProfile, {
   IsPvPCapable = function(self) return false end,
-  Buff = function(self) return false end,
-  BeforeCast = function(self) return false end,
-  Cast = function(self, target) return false end,
-  PvPCast = function(self, target) return false end,
+  Cast = function(self) return false end,
+  PvPCast = function(self) return false end,
 })
 
 OpenACR.CraftingProfile = abstractFrom(OpenACR.DefaultProfile, {
@@ -112,18 +110,13 @@ end
 
 function OpenACR.Combat()
   if OpenACR.CurrentRole == nil then return false end
-  if OpenACR.CurrentProfile:Buff() then return true end
-  if OpenACR.CurrentProfile:BeforeCast() then return true end
+  if OpenACR.CurrentRole:Cast() then return true end
+  if OpenACR.CurrentProfile:Cast() then return true end
+end
 
+function OpenACR.PvP()
   local target = MGetTarget()
-  if target == nil then return false end
-
-  if OpenACR.IsPvP and OpenACR.CurrentProfile:IsPvPCapable() then
-    return OpenACR.CurrentProfile:PvPCast(target)
-  end
-
-  if OpenACR.CurrentRole:Cast(target) then return true end
-  return OpenACR.CurrentProfile:Cast(target)
+  return OpenACR.CurrentProfile:PvPCast(target)
 end
 
 function OpenACR.Cast()
@@ -132,6 +125,8 @@ function OpenACR.Cast()
 
   if IsCrafter(Player.job) then
     return OpenACR.Craft()
+  elseif OpenACR.IsPvP and OpenACR.CurrentProfile:IsPvPCapable() then
+    return OpenACR.PvP()
   else
     return OpenACR.Combat()
   end
@@ -155,7 +150,7 @@ end
 function OpenACR.Draw()
   if not OpenACR.GUI.open then return end
 
-  GUI:SetNextWindowSize(210, 270)
+  GUI:SetNextWindowSize(225, 270)
   OpenACR.GUI.visible, OpenACR.GUI.open = GUI:Begin(OpenACR.GUI.name, OpenACR.GUI.open, GUI.WindowFlags_NoResize + GUI.WindowFlags_NoScrollbar + GUI.WindowFlags_NoScrollWithMouse)
 
   if OpenACR.GUI.visible then
