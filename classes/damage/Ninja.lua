@@ -1,6 +1,7 @@
 local Ninja = abstractFrom(OpenACR.CombatProfile)
 local TargetHasTrickAttack = false
 local TargetHasMug = false
+local ShukuchiRange = 7
 
 local Mudras = {
   Fuma   = { 'ten' },
@@ -119,25 +120,13 @@ local function CastMudra(name)
 end
 
 local function BasicCombo(target)
-  if Player.lastcomboid == Skills.DeathBlossom then
-    return ReadyCast(Player.id, Skills.HakkeMujinsatsu)
-  elseif Player.lastcomboid == Skills.GustSlash and Player.gauge[2] > 30000 then
+  if Player.lastcomboid == Skills.GustSlash and Player.gauge[2] > 30000 then
     return ReadyCast(target.id, Skills.AeolianEdge)
   elseif Player.lastcomboid == Skills.SpinningEdge then
     return ReadyCast(target.id, Skills.GustSlash)
   end
 
   return false
-end
-
-local function GetBuff(id)
-  for i,_ in ipairs(Player.buffs) do
-    if Player.buffs[i].id == id then
-      return Player.buffs[i]
-    end
-  end
-
-  return nil
 end
 
 local function DidNotCastMudraLast()
@@ -156,11 +145,15 @@ local usedSuiton = false
 
 -- The Cast() function is where the magic happens.
 -- Action code should be called and fired here.
-function Ninja:Cast(target)
+function Ninja:Cast()
+  local target = MGetTarget()
+  local nearby = GetNearbyEnemies(5)
+
   TargetHasTrickAttack  = HasBuff(target.id, Buffs.TrickAttack)
   TargetHasMug          = HasBuff(target.id, Buffs.Mug)
-  local playerTCJ       = GetBuff(Buffs.TenChiJin)
-  local playerMudra     = GetBuff(Buffs.Mudra)
+  local playerTCJ       = HasBuff(Player.id, Buffs.TenChiJin)
+  local playerMudra     = HasBuff(Player.id, Buffs.Mudra)
+
 
   -- TimeSince Failsafe
   if #MudraQueue > 0 and TimeSince(StartMudra) < 6000 then
@@ -204,8 +197,6 @@ function Ninja:Cast(target)
 
     return false
   end
-
-  local nearby = GetNearbyEnemies(5)
 
   -- Cast Huton if player doesn't have it.
   if Player.gauge[2] == 0 and IsNinjutsuReady() and IsCapable(Skills.Huton) then
@@ -276,12 +267,19 @@ function Ninja:Cast(target)
   end
 
   if self.ComboEnabled then
-    if BasicCombo(target) then return true end
     if self.AOEEnabled and #nearby > 2 and IsCapable(Skills.DeathBlossom) then
+      if Player.lastcomboid == Skills.DeathBlossom then
+        if ReadyCast(Player.id, Skills.HakkeMujinsatsu) then return true end
+      end
       if ReadyCast(Player.id, Skills.DeathBlossom) then return true end
     else
+      if BasicCombo(target) then return true end
       if ReadyCast(target.id, Skills.SpinningEdge) then return true end
     end
+  end
+
+  if self.ShukuchiEnabled and DistanceToTarget2D(target) >= ShukuchiRange then
+    if ReadyCast(target.id, Skills.Shukuchi) then return true end
   end
 
   if self.ThrowingEnabled then
@@ -309,6 +307,7 @@ function Ninja:Draw()
   self.AssassinateEnabled = OpenACR.ListCheckboxItem("Assassinate", self.AssassinateEnabled, 160)
   self.MeisuiEnabled = OpenACR.ListCheckboxItem("Meisui", self.MeisuiEnabled, 160)
   self.TAEnabled = OpenACR.ListCheckboxItem("Trick Attack", self.TAEnabled, 160)
+  self.ShukuchiEnabled = OpenACR.ListCheckboxItem("Shukuchi", self.ShukuchiEnabled, 160)
   GUI:EndChild()
 end
 
@@ -329,6 +328,7 @@ function Ninja:OnLoad()
   self.AssassinateEnabled = ACR.GetSetting("OpenACR_Ninja_AssassinateEnabled", true)
   self.MeisuiEnabled = ACR.GetSetting("OpenACR_Ninja_MeisuiEnabled", true)
   self.TAEnabled = ACR.GetSetting("OpenACR_Ninja_TrickAttackEnabled", true)
+  self.ShukuchiEnabled = ACR.GetSetting("OpenACR_Ninja_Shukuchi", true)
 end
 
 -- The OnClick function is fired when a user clicks on the ACR party interface.
